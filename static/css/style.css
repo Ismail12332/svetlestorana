@@ -1,0 +1,159 @@
+/* 1 page */
+body {
+    width: 100%;
+    background: linear-gradient(to bottom, #011a2b, #011529);
+}
+
+h1,h2,h3,h4 {
+    color: #fff;
+}
+
+label {
+    color: #fff;
+}
+
+p,ul {
+    color: #fff;
+}
+
+li {
+    color: #fff;
+}
+
+.info {
+    display: block;
+    flex-wrap: wrap;
+}
+
+.g-3, .gy-3 {
+    --bs-gutter-y: 1rem;
+    width: 100%;
+}
+
+
+.sitename {
+    width: 92%;
+}
+
+.formablack {
+    color: #000;
+}
+
+.cellcoment {
+    height: 30px;
+    margin: -7px;
+}
+
+.project-info {
+    display: flex;
+    margin: 3%;
+    flex: 1; /* Равное распределение доступного пространства между дочерними элементами */
+    border: 1px solid #000; /* Добавьте границу, чтобы лучше видеть разделение */
+    padding: 10px;
+    background-color: #191d32;
+    justify-content: space-around;
+}
+
+/* 2 page */
+.top {
+    display: flex;
+    justify-content: space-evenly;
+    margin: 15px;
+    width: 92%;
+}
+
+button {
+    margin: 13px;
+    padding: 15px;
+    border-radius: 10%;
+    background-color: #d3be25f2;
+}
+
+.forplus {
+    float: right;
+    margin-right: 9%;
+}
+
+.button-clicked {
+    background-color: #14d424; /* Замените на желаемый цвет */
+    color: rgb(0, 0, 0); /* Замените на желаемый цвет текста */
+}
+
+.subsection-button-clicked {
+    background-color: #4CAF50; /* Замените на желаемый цвет */
+    color: white; /* Замените на желаемый цвет текста */
+}
+
+.osnova {
+    display: flex;
+    justify-content: center;
+}
+
+.gen_info_section {
+    display: flex;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.forosnova {
+    display: flex;
+    justify-content: space-around;
+}
+
+.deck {
+    margin-left: 2%;
+}
+
+/* внешка для ячеек */
+.divforcell {
+
+}
+
+.cellname {
+    display: inline-block;
+    padding: 1%;
+    border-radius: 20px; /* Регулируйте радиус капсулы */
+    background: linear-gradient(to bottom, #3498db, #2c3e50); /* Градиент от синего до темно-синего */
+    color: #fff; /* Цвет текста (белый в данном случае) */
+    width: 92%;
+    margin-bottom: 0rem;
+}
+
+.celldescrip {
+    display: inline-block;
+    padding: 1%;
+    border-radius: 20px; /* Регулируйте радиус капсулы */
+    background: linear-gradient(to right, #3498db, #2c3e50); /* Градиент от синего до темно-синего */
+    color: #fff; /* Цвет текста (белый в данном случае) */
+    width: 92%;
+}
+
+.cellcoment {
+    height: 30px;
+}

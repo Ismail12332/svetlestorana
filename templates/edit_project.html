@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Project</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> <!--{{ url_for('static', filename='css/style.css') }}  /static/css/style.css-->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+</head>
+<body>
+    <h1 class="sitename">Survzilla</h1>
+    <a href="{{ url_for('home') }}" class="btn btn-danger">Выйти из проекта</a>
+    <div class="top">
+        <h1>Edit Project: {{ project.first_name }} {{ project.last_name }} vessel name: {{ project.vessel_name }}</h1>
+    </div>
+    <!-- Навигация для переключения между разделами -->
+    <div class="deck">
+        <button id="introduction-sections-button" onclick="showIntroductionSections()">INTRODUCTION</button>
+        <button id="hull-sections-button" onclick="showHullSections()">Hull,DECK & SUPERSTRUCTURE</button>
+        <button id="above-sections-button" onclick="showAboveSections()">ABOVE</button>
+        <button id="below-sections-button" onclick="showBelowSections()">BELOW</button>
+        <button id="cathodic-protection-sections-button" onclick="showCathodicProtectionSections()">CATHODIC PROTECTION</button>
+        <button id="helm-station-sections-button" onclick="showHelmStationSections()">HELM STATION & NAVIGATIONAL</button>
+        <button id="cabin-interior-sections-button" onclick="showCabinInteriorSections()">CABIN INTERIOR APPOINTMENTS</button>
+        <button id="electrical-systems-button" onclick="showElectricalSystemsSections()">ELECTRICAL SYSTEMS</button>
+        <button id="inboard-propulsion-sections-button" onclick="showInboardPropulsionSections()">INBOARD PROPULSION SYSTEM</button>
+        <button id="steering-system-sections-button" onclick="showSteeringSystemSections()">STEERING SYSTEM</button>
+        <button id="tankage-sections-button" onclick="showTankageSections()">TANKAGE</button>
+        <button id="safety-equipment-sections-button" onclick="showSafetyEquipmentSections()">SAFETY EQUIPMENT</button>
+        <button class="forplus" id="create-section-button" onclick="showCreateSectionModal()">+</button>
+        {% for section in project.sections %}
+            <button id="{{ section.name }}-button" onclick="showSubsections('{{ section.name }}')">{{ section.name }}</button>
+            <div id="subsections-{{ section.name }}" style="display: none;" class="osnova">
+                <h1 class="forosnova">{{ section.name }}</h1>
+                <button class="forplus" onclick="showCreateSubsectionModal('{{ section.name }}')">+</button>
+                {% if section.subsections %}
+                    {% for subsection in section.subsections %}
+                        <button onclick="showCells('{{ section.name }}', '{{ subsection.name }}')">{{ subsection.name }}</button>
+                        <div id="cells-{{ section.name }}-{{ subsection.name }}" style="display: none;">
+                            <h1 class="forosnova">{{ subsection.name }}</h1>
+                            <button class="forplus" onclick="showCreateCellModal('{{ section.name }}', '{{ subsection.name }}')">+</button>
+                            {% if section.subsections %}
+                                {% for cell in subsection.cells %}
+                                <div class="cell">
+                                    <button  onclick="showCellInfo('{{ section.name }}', '{{ subsection.name }}', '{{ cell.name }}')">{{ cell.name }}</button>
+                                    <div id="cellInfo-{{ section.name }}-{{ subsection.name }}-{{ cell.name }}" style="display: none;">
+                                        <!-- Вывод информации о ячейке -->
+                                        <p class="cellname">{{ cell.name }}</p>
+                                        <div class="celldescrip">
+                                            <p class=""><strong>Description:</strong> {{ cell.description }}</p>
+                                            <ul>{{ cell.comment }}</ul>
+                                            <ul>{{ cell.rating }}</ul>
+                                            <form action="{{ url_for('add_comment', project_id=project_id, section_name=section.name, subsection_name=subsection.name, cell_name=cell.name) }}" method="post">
+                                                <label for="cell_comment">Комментарий:</label>
+                                                <textarea class="cellcoment" name="cell_comment" id="cell_comment" rows="4" required></textarea>
+                                                <button type="submit">Добавить комментарий</button>
+                                            </form>
+                                            <form action="{{ url_for('add_rating', project_id=project_id, section_name=section.name, subsection_name=subsection.name, cell_name=cell.name) }}" method="post">
+                                                <label for="cell_rating">Рейтинг:</label>
+                                                <select name="cell_rating" id="cell_rating" required>
+                                                    <option value="good">Хорошо</option>
+                                                    <option value="average">Средне</option>
+                                                    <option value="bad">Плохо</option>
+                                                </select>
+                                                <button type="submit">Выбрать рейтинг</button>
+                                            </form>
+                                        </div>
+                                        <h2>Добавить комментарий к ячейке</h2>
+                                        <form action="{{ url_for('add_comment', project_id=project_id, section_name=section.name, subsection_name=subsection.name, cell_name=cell.name) }}" method="post">
+                                            <label for="cell_comment">Комментарий:</label>
+                                            <textarea class="cellcoment" name="cell_comment" id="cell_comment" rows="4" required></textarea>
+                                            <button type="submit">Добавить комментарий</button>
+                                        </form>
+                                        <h2>Выбрать рейтинг ячейки</h2>
+                                        <form action="{{ url_for('add_rating', project_id=project_id, section_name=section.name, subsection_name=subsection.name, cell_name=cell.name) }}" method="post">
+                                            <label for="cell_rating">Рейтинг:</label>
+                                            <select name="cell_rating" id="cell_rating" required>
+                                                <option value="good">Хорошо</option>
+                                                <option value="average">Средне</option>
+                                                <option value="bad">Плохо</option>
+                                            </select>
+                                            <button type="submit">Выбрать рейтинг</button>
+                                        </form>
+                                        <!-- Добавьте другую информацию о ячейке, если есть -->
+                                    </div>
+                                </div>
+                                    <h4>{{ cell.name }}</h4>
+                                    <ul>{{ cell.description }}</ul>
+                                    <ul>{{ cell.comment }}</ul>
+                                    <ul>{{ cell.rating }}</ul>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        {% endfor %}
+        <div class="osnova" style="display: none;" id="introduction-sections">
+            <h1 class="forosnova">Introduction sections</h1>
+            <button id="gen_info-button" onclick="showSubsection('gen_info')">Genera Vessel Info</button>
+            <button id="certification-button" onclick="showSubsection('certification')">CERTIFICATION</button>
+            <button id="purpose_of_survey-button" onclick="showSubsection('purpose_of_survey')">PURPOSE OF SURVEY</button>
+            <button id="circumstances_of_survey-button" onclick="showSubsection('circumstances_of_survey')">CIRCUMSTANCES OF SURVEY</button>
+            <button id="report_file_no-button" onclick="showSubsection('report_file_no')">REPORT FILE NO</button>
+            <button id="surveyor_qualifications-button" onclick="showSubsection('surveyor_qualifications')">SURVEYOR QUALIFICATIONS</button>
+            <button id="intended_use-button" onclick="showSubsection('intended_use')">INTENDED USE</button>
+        </div>
+        <div class="osnova" style="display: none;" id="hull-sections">
+            <h1 class="forosnova">Hull sections</h1>
+            <button id="layout_overview-button" onclick="showSubsection('layout_overview')">LAYOUT OVERVIEW</button>
+            <button id="design-button" onclick="showSubsection('design')">DESIGN</button>
+            <button id="deck-button" onclick="showSubsection('deck')">DECK</button>
+            <button id="structural_members-button" onclick="showSubsection('structural_members')">STRUCTURAL MEMBERS</button>
+            <button id="bottom_paint-button" onclick="showSubsection('bottom_paint')">BOTTOM PAINT</button>
+            <button id="blister_comment-button" onclick="showSubsection('blister_comment')">BLISTER COMMENT</button>
+            <button id="transom'-button" onclick="showSubsection('transom')">TRANSOM</button>
+        </div>
+        <div class="osnova" style="display: none;" id="above-sections">
+            <h1 class="forosnova">Above sections</h1>
+            <button id="deck_floor_plan-button" onclick="showSubsection('deck_floor_plan')">DECK FLOOR PLAN</button>
+            <button id="anchor_platform-button" onclick="showSubsection('anchor_platform')">ANCHOR PLATFORM</button>
+            <button id="toe_rails-button" onclick="showSubsection('toe_rails')">TOE RAILS</button>
+            <button id="mooring_hardware-button" onclick="showSubsection('mooring_hardware')">MOORING HARDWARE</button>
+            <button id="hatches-button" onclick="showSubsection('hatches')">HATCHES</button>
+            <button id="exterior_seating-button" onclick="showSubsection('exterior_seating')">EXTERIOR SEATING</button>
+            <button id="cockpit_equipment-button" onclick="showSubsection('cockpit_equipment')">COCKPIT EQUIPMENT</button>
+            <button id="ngine_hatch-button" onclick="showSubsection('engine_hatch')">ENGINE HATCH</button>
+            <button id="above_draw_water_line-button" onclick="showSubsection('above_draw_water_line')">ABOVE DRAW WATER LINE</button>
+            <button id="boarding_ladder-button" onclick="showSubsection('boarding_ladder')">BOARDING LADDER</button>
+            <button id="swim_platform-button" onclick="showSubsection('swim_platform')">SWIM PLATFORM</button>
+        </div>
+        <div class="osnova" style="display: none;" id="below-sections">
+            <h1 class="forosnova">Below sections</h1>
+            <button id="below_draw_water-button" onclick="showSubsection('below_draw_water')">BELOW DRAW WATER</button>
+            <button id="thru_hull_strainers-button" onclick="showSubsection('thru_hull_strainers')">THRU HULL STRAINERS</button>
+            <button id="transducer-button" onclick="showSubsection('transducer')">TRANSDUCER(S)</button>
+            <button id="sea_valves-button" onclick="showSubsection('sea_valves')">SEA VALVES</button>
+            <button id="sea_strainers-button" onclick="showSubsection('sea_strainers')">SEA STRAINERS</button>
+            <button id="trim_tabs-button" onclick="showSubsection('trim_tabs')">TRIM TABS</button>
+            <button id="note-button" onclick="showSubsection('note')">NOTE</button>
+        </div>
+        <div class="osnova" style="display: none;" id="cathodic-protection-sections">
+            <h1 class="forosnova">Cathodic protection sections</h1>
+            <button id="bonding_system-button" onclick="showSubsection('bonding_system')">BONDING SYSTEM</button>
+            <button id="anodes-button" onclick="showSubsection('anodes')">ANODES</button>
+            <button id="lightning_protection-button" onclick="showSubsection('lightning_protection')">LIGHTNING PROTECTION</button>
+            <button id="additional_remarks-button" onclick="showSubsection('additional_remarks')">ADDITIONAL REMARKS</button>
+        </div>
+        <div class="osnova" style="display: none;" id="helm-station-sections">
+            <h1 class="forosnova">Helm station sections</h1>
+            <button id="helm_station-button" onclick="showSubsection('helm_station')">HELM STATION</button>
+            <button id="throttle_shift_controls-button" onclick="showSubsection('throttle_shift_controls')">THROTTLE & SHIFT CONTROLS</button>
+            <button id="engine_room_blowers-button" onclick="showSubsection('engine_room_blowers')">ENGINE ROOM BLOWERS</button>
+            <button id="engine_status-button" onclick="showSubsection('engine_status')">ENGINE STATUS</button>
+            <button id="other_electronics_controls-button" onclick="showSubsection('other_electronics_controls')">OTHER ELECTRONICS & CONTROLS</button>
+        </div>
+        <div class="osnova" style="display: none;" id="cabin-interior-sections">
+            <h1 class="forosnova">Cabin interior sections</h1>
+            <button id="entertainment_berthing-button" onclick="showSubsection('entertainment_berthing')">ENTERTAINMENT BERTHING & SALON</button>
+            <button id="interior_lighting-button" onclick="showSubsection('interior_lighting')">INTERIOR LIGHTING</button>
+            <button id="galley_dinette-button" onclick="showSubsection('galley_dinette')">GALLEY/DINETTE & ACCESSORIES</button>
+            <button id="water_closets-button" onclick="showSubsection('water_closets')">WATER CLOSET(S)</button>
+            <button id="climate_control-button" onclick="showSubsection('climate_control')">CLIMATE CONTROL</button>
+        </div>
+        <div class="osnova" style="display: none;" id="electrical-systems-sections">
+            <h1 class="forosnova">Electrical systems sections</h1>
+            <button id="dc_systems_type-button" onclick="showSubsection('dc_systems_type')">DIRECT CURRENT SYSTEM(S) TYPE</button>
+            <button id="ac_systems-button" onclick="showSubsection('ac_systems')">ALTERNATING CURRENT (A.C.) SYSTEM(S)</button>
+            <button id="generator-button" onclick="showSubsection('generator')">GENERATOR</button>
+        </div>
+        <div class="osnova" style="display: none;" id="inboard-propulsion-sections">
+            <h1 class="forosnova">Inboard propulsion sections</h1>
+            <button id="engines-button" onclick="showSubsection('engines')">ENGINE(S)</button>
+            <button id="serial_numbers-button" onclick="showSubsection('serial_numbers')">SERIAL NUMBERS</button>
+            <button id="engine_hours-button" onclick="showSubsection('engine_hours')">ENGINE(S) HOURS</button>
+            <button id="other_note-button" onclick="showSubsection('other_note')">OTHER NOTE</button>
+            <button id="reverse_gears-button" onclick="showSubsection('reverse_gears')">REVERSE GEAR(S)</button>
+            <button id="shafting_propellers-button" onclick="showSubsection('shafting_propellers')">SHAFTING & PROPELLER(S)</button>
+        </div>
+        <div class="osnova" style="display: none;" id="steering-system-sections">
+            <h1 class="forosnova">Steering system sections</h1>
+            <button id="manufacture-button" onclick="showSubsection('manufacture')">MANUFACTURE</button>
+            <button id="steering_components-button" onclick="showSubsection('steering_components')">STEERING SYSTEM COMPONENTS</button>
+        </div>
+        <div class="osnova" style="display: none;" id="tankage-sections">
+            <h1 class="forosnova">Tankage sections</h1>
+            <button id="fuel_tank-button" onclick="showSubsection('fuel_tank')">FUEL TANK(S) & PIPING</button>
+            <button id="potable_water_system-button" onclick="showSubsection('potable_water_system')">POTABLE WATER SYSTEM & WATER HEATER</button>
+            <button id="holding_tank_black_water-button" onclick="showSubsection('holding_tank_black_water')">HOLDING TANK(S)-BLACK WATER</button>
+        </div>
+        <div class="osnova" style="display: none;" id="safety-equipment-sections">
+            <h1 class="forosnova">Safety equipment sections</h1>
+            <button id="navigational_lights-button" onclick="showSubsection('navigational_lights')">NAVIGATIONAL LIGHTS</button>
+            <button id="life_jackets-button" onclick="showSubsection('life_jackets')">LIFE JACKETS (P.F.D,'S)</button>
+            <button id="throwable_pfd-button" onclick="showSubsection('throwable_pfd')">THROWABLE TYPE P.F.D</button>
+            <button id="visual_distress_signals-button" onclick="showSubsection('visual_distress_signals')">VISUAL DISTRESS SIGNALS</button>
+            <button id="sound_devices-button" onclick="showSubsection('sound_devices')">SOUND DEVICES</button>
+            <button id="uscg_placards-button" onclick="showSubsection('uscg_placards')">U.S.C.G. PLACARDS</button>
+            <button id="flame_arrestors-button" onclick="showSubsection('flame_arrestors')">FLAME ARRESTOR(S)</button>
+            <button id="engine_ventilation-button" onclick="showSubsection('engine_ventilation')">ENGINE VENTILATION</button>
+            <button id="ignition_protection-button" onclick="showSubsection('ignition_protection')">IGNITION PROTECTION</button>
+            <button id="inland_navigational_rule_book-button" onclick="showSubsection('inland_navigational_rule_book')">INLAND NAVIGATIONAL RULE BOOK</button>
+            <button id="waste_management_plan-button" onclick="showSubsection('waste_management_plan')">WASTE MANAGEMENT PLAN</button>
+            <button id="fire_fighting_equipment-button" onclick="showSubsection('fire_fighting_equipment')">FIRE FIGHTING EQUIPMENT</button>
+            <button id="bilge_pumps-button" onclick="showSubsection('bilge_pumps')">BILGE PUMPS</button>
+            <button id="ground_tackle_windlass-button" onclick="showSubsection('ground_tackle_windlass')">GROUND TACKLE & WINDLASS</button>
+            <button id="auxiliary_safety_equipment-button" onclick="showSubsection('auxiliary_safety_equipment')">AUXILIARY SAFETY EQUIPMENT</button>
+        </div>
+
+
+    <!--Subsection section safety-equipment-->
+    <!--navigational_lights -->
+    <div id="navigational_lights-section" style="display: none;" class="infomation">
+        <h2>navigational_lights:</h2>
+        <ul>
+            {% for step in navigational_lights_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="navigational_lights">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- life_jackets -->
+    <div id="life_jackets-section" style="display: none;" class="infomation">
+        <h2>life jackets:</h2>
+        <ul>
+            {% for step in life_jackets_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="life_jackets">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- throwable_pfd -->
+    <div id="throwable_pfd-section" style="display: none;" class="infomation">
+        <h2>THROWABLE TYPE P.F.D:</h2>
+        <ul>
+            {% for step in throwable_pfd_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="throwable_pfd">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- visual_distress_signals -->
+    <div id="visual_distress_signals-section" style="display: none;" class="infomation">
+        <h2>visual distress signals:</h2>
+        <ul>
+            {% for step in visual_distress_signals_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="visual_distress_signals">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- sound_devices -->
+    <div id="sound_devices-section" style="display: none;" class="infomation">
+        <h2>sound devices:</h2>
+        <ul>
+            {% for step in project.sound_devices_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="sound_devices">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- uscg_placards -->
+    <div id="uscg_placards-section" style="display: none;" class="infomation">
+        <h2>uscg placards:</h2>
+        <ul>
+            {% for step in project.uscg_placards_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="uscg_placards">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- flame_arrestors -->
+    <div id="flame_arrestors-section" style="display: none;" class="infomation">
+        <h2>flame arrestors:</h2>
+        <ul>
+            {% for step in project.flame_arrestors_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="flame_arrestors">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- engine_ventilation -->
+    <div id="engine_ventilation-section" style="display: none;" class="infomation">
+        <h2>engine ventilation:</h2>
+        <ul>
+            {% for step in project.engine_ventilation_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="engine_ventilation">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- ignition_protection -->
+    <div id="ignition_protection-section" style="display: none;" class="infomation">
+        <h2>ignition protection:</h2>
+        <ul>
+            {% for step in project.ignition_protection_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="ignition_protection">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- inland_navigational_rule_book -->
+    <div id="inland_navigational_rule_book-section" style="display: none;" class="infomation">
+        <h2>inland navigational rule book:</h2>
+        <ul>
+            {% for step in project.inland_navigational_rule_book_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="inland_navigational_rule_book">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- waste_management_plan -->
+    <div id="waste_management_plan-section" style="display: none;" class="infomation">
+        <h2>waste management plan:</h2>
+        <ul>
+            {% for step in project.waste_management_plan_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="waste_management_plan">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- fire_fighting_equipment -->
+    <div id="fire_fighting_equipment-section" style="display: none;" class="infomation">
+        <h2>fire fighting equipment:</h2>
+        <ul>
+            {% for step in project.fire_fighting_equipment_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="fire_fighting_equipment">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- bilge_pumps -->
+    <div id="bilge_pumps-section" style="display: none;" class="infomation">
+        <h2>bilge pumps:</h2>
+        <ul>
+            {% for step in project.bilge_pumps_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="bilge_pumps">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- ground_tackle_windlass -->
+    <div id="ground_tackle_windlass-section" style="display: none;" class="infomation">
+        <h2>ground tackle windlass:</h2>
+        <ul>
+            {% for step in project.ground_tackle_windlass_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="ground_tackle_windlass">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- auxiliary_safety_equipment -->
+    <div id="auxiliary_safety_equipment-section" style="display: none;" class="infomation">
+        <h2>auxiliary safety equipment:</h2>
+        <ul>
+            {% for step in project.auxiliary_safety_equipment_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="auxiliary_safety_equipment">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!--Finish subsection section tankage-->
+
+
+    <!--Subsection section tankage-->
+    <!-- holding_tank_black_water -->
+    <div id="holding_tank_black_water-section" style="display: none;" class="infomation">
+        <h2>holding tank black water:</h2>
+        <ul>
+            {% for step in project.holding_tank_black_water_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="holding_tank_black_water">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- potable_water_system -->
+    <div id="potable_water_system-section" style="display: none;" class="infomation">
+        <h2>potable water system:</h2>
+        <ul>
+            {% for step in project.potable_water_system_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="potable_water_system">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- fuel_tank -->
+    <div id="fuel_tank-section" style="display: none;" class="infomation">
+        <h2>fuel tank:</h2>
+        <ul>
+            {% for step in project.fuel_tank_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="fuel_tank">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!--Finish subsection section steering-system-->
+
+
+    <!--Subsection section steering-system-->
+    <!-- steering_components -->
+    <div id="steering_components-section" style="display: none;" class="infomation">
+        <h2>steering components:</h2>
+        <ul>
+            {% for step in project.steering_components_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="steering_components">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- manufacture -->
+    <div id="manufacture-section" style="display: none;" class="infomation">
+        <h2>manufacture:</h2>
+        <ul>
+            {% for step in project.manufacture_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="manufacture">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!--Finish subsection section steering-system-->
+
+
+    <!--Subsection section inboard-propulsion-->
+    <!-- shafting_propellers -->
+    <div id="shafting_propellers-section" style="display: none;" class="infomation">
+        <h2>shafting propellers:</h2>
+        <ul>
+            {% for step in project.shafting_propellers_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="shafting_propellers">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- reverse_gears -->
+    <div id="reverse_gears-section" style="display: none;" class="infomation">
+        <h2>reverse gears:</h2>
+        <ul>
+            {% for step in project.reverse_gears_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="reverse_gears">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- other_note-->
+    <div id="other_note-section" style="display: none;" class="infomation">
+        <h2>other note:</h2>
+        <ul>
+            {% for step in project.other_note_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="other_note">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- engine_hours-->
+    <div id="engine_hours-section" style="display: none;" class="infomation">
+        <h2>engine hours:</h2>
+        <ul>
+            {% for step in project.engine_hours_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="engine_hours">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- serial_numbers -->
+    <div id="serial_numbers-section" style="display: none;" class="infomation">
+        <h2>serial numbers:</h2>
+        <ul>
+            {% for step in project.serial_numbers_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="serial_numbers">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- engines -->
+    <div id="engines-section" style="display: none;" class="infomation">
+        <h2>engines:</h2>
+        <ul>
+            {% for step in project.engines_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="engines">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!--Finish subsection section inboard-propulsion-->
+
+    <!--Subsection section electrical-systems-->
+    <!-- ac_systems -->
+    <div id="generator-section" style="display: none;" class="infomation">
+        <h2>generator:</h2>
+        <ul>
+            {% for step in project.generator_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="generator">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- ac_systems -->
+    <div id="ac_systems-section" style="display: none;" class="infomation">
+        <h2>ac systems:</h2>
+        <ul>
+            {% for step in project.ac_systems_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="ac_systems">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- ac_systems -->
+    <div id="ac_systems-section" style="display: none;" class="infomation">
+        <h2>ac_systems:</h2>
+        <ul>
+            {% for step in project.ac_systems_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="ac_systems">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- dc_systems_type -->
+    <div id="dc_systems_type-section" style="display: none;" class="infomation">
+        <h2>dc systems type:</h2>
+        <ul>
+            {% for step in project.dc_systems_type_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="dc_systems_type">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!--Finish subsection section electrical-systems-->
+
+    <!--Subsection section cabin-interior-->
+    <!-- climate_control -->
+    <div id="climate_control-section" style="display: none;" class="infomation">
+        <h2>climate control:</h2>
+        <ul>
+            {% for step in project.climate_control_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="climate_control">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- climate_control -->
+    <div id="climate_control-section" style="display: none;" class="infomation">
+        <h2>climate control:</h2>
+        <ul>
+            {% for step in project.climate_control_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="climate_control">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- water_closets -->
+    <div id="water_closets-section" style="display: none;" class="infomation">
+        <h2>water closets:</h2>
+        <ul>
+            {% for step in project.water_closets_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="water_closets">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- galley_dinette -->
+    <div id="galley_dinette-section" style="display: none;" class="infomation">
+        <h2>galleyn dinette:</h2>
+        <ul>
+            {% for step in project.galley_dinette_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="galley_dinette">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- interior_lighting -->
+    <div id="interior_lighting-section" style="display: none;" class="infomation">
+        <h2>interior lighting:</h2>
+        <ul>
+            {% for step in project.interior_lighting_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="interior_lighting">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- entertainment_berthing -->
+    <div id="entertainment_berthing-section" style="display: none;" class="infomation">
+        <h2>entertainment berthing:</h2>
+        <ul>
+            {% for step in project.entertainment_berthing_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="entertainment_berthing">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!--Finish subsection section cabin-interior-->
+
+    <!--Subsection section helm-station-->
+    <!-- other_electronics_controls -->
+    <div id="other_electronics_controls-section" style="display: none;" class="infomation">
+        <h2>other electronics controls:</h2>
+        <ul>
+            {% for step in project.other_electronics_controls_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="other_electronics_controls">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- engine_status -->
+    <div id="engine_status-section" style="display: none;" class="infomation">
+        <h2>engine status:</h2>
+        <ul>
+            {% for step in project.engine_status_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="engine_status">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- engine_room_blowers -->
+    <div id="engine_room_blowers-section" style="display: none;" class="infomation">
+        <h2>engine room blowers:</h2>
+        <ul>
+            {% for step in project.engine_room_blowers_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="engine_room_blowers">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- throttle_shift_controls -->
+    <div id="throttle_shift_controls-section" style="display: none;" class="infomation">
+        <h2>throttle shift controls:</h2>
+        <ul>
+            {% for step in project.throttle_shift_controls_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="throttle_shift_controls">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- helm_station -->
+    <div id="helm_station-section" style="display: none;" class="infomation">
+        <h2>helm station:</h2>
+        <ul>
+            {% for step in project.helm_station_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="helm_station">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!--Finish subsection section helm-station-->
+
+
+    <!--Subsection section cathodic-protection-->
+    <!-- additional_remarks -->
+    <div id="additional_remarks-section" style="display: none;" class="infomation">
+        <h2>additional remarks:</h2>
+        <ul>
+            {% for step in project.additional_remarks_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="additional_remarks">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- lightning_protection -->
+    <div id="lightning_protection-section" style="display: none;" class="infomation">
+        <h2>lightning protection:</h2>
+        <ul>
+            {% for step in project.lightning_protection_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="lightning_protection">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- anodes -->
+    <div id="anodes-section" style="display: none;" class="infomation">
+        <h2>anodes:</h2>
+        <ul>
+            {% for step in project.anodes_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="anodes">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- bonding_system -->
+    <div id="bonding_system-section" style="display: none;" class="infomation">
+        <h2>bonding system:</h2>
+        <ul>
+            {% for step in project.bonding_system_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="bonding_system">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!--Finish subsection section below-->
+
+
+    <!--Subsection section below-->
+    <!-- note -->
+    <div id="note-section" style="display: none;" class="infomation">
+        <h2>note:</h2>
+        <ul>
+            {% for step in project.note_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="note">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- trim_tabs -->
+    <div id="trim_tabs-section" style="display: none;" class="infomation">
+        <h2>trim tabs:</h2>
+        <ul>
+            {% for step in project.trim_tabs_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="trim_tabs">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- sea_strainers -->
+    <div id="sea_strainers-section" style="display: none;" class="infomation">
+        <h2>sea strainers:</h2>
+        <ul>
+            {% for step in project.sea_strainers_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="sea_strainers">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- sea_valves -->
+    <div id="sea_valves-section" style="display: none;" class="infomation">
+        <h2>sea valves:</h2>
+        <ul>
+            {% for step in project.sea_valves_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="sea_valves">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- transducer -->
+    <div id="transducer-section" style="display: none;" class="infomation">
+        <h2>transducer:</h2>
+        <ul>
+            {% for step in project.transducer_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="transducer">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- thru_hull_strainers -->
+    <div id="thru_hull_strainers-section" style="display: none;" class="infomation">
+        <h2>thru hull strainers:</h2>
+        <ul>
+            {% for step in project.thru_hull_strainers_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="thru_hull_strainers">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- below_draw_water -->
+    <div id="below_draw_water-section" style="display: none;" class="infomation">
+        <h2>below draw water:</h2>
+        <ul>
+            {% for step in project.below_draw_water_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="below_draw_water">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!--Finish subsection section below-->
+
+
+
+    <!--Subsection section above-->
+    <!-- swim_platform -->
+    <div id="swim_platform-section" style="display: none;" class="infomation">
+        <h2>swim platform:</h2>
+        <ul>
+            {% for step in project.swim_platform_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="swim_platform">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- boarding_ladder -->
+    <div id="boarding_ladder-section" style="display: none;" class="infomation">
+        <h2>boarding ladder:</h2>
+        <ul>
+            {% for step in project.boarding_ladder_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="boarding_ladder">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- above_draw_water_line -->
+    <div id="above_draw_water_line-section" style="display: none;" class="infomation">
+        <h2>above draw water line:</h2>
+        <ul>
+            {% for step in project.above_draw_water_line_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="above_draw_water_line">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- engine_hatch -->
+    <div id="engine_hatch-section" style="display: none;" class="infomation">
+        <h2>engine hatch:</h2>
+        <ul>
+            {% for step in project.engine_hatch_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="engine_hatch">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- cockpit_equipment -->
+    <div id="cockpit_equipment-section" style="display: none;" class="infomation">
+        <h2>ecockpit equipment:</h2>
+        <ul>
+            {% for step in project.cockpit_equipment_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="cockpit_equipment">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- exterior_seating -->
+    <div id="exterior_seating-section" style="display: none;" class="infomation">
+        <h2>exterior seating:</h2>
+        <ul>
+            {% for step in project.exterior_seating_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="exterior_seating">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- hatches -->
+    <div id="hatches-section" style="display: none;" class="infomation">
+        <h2>hatches:</h2>
+        <ul>
+            {% for step in project.hatches_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="hatches">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- mooring_hardware -->
+    <div id="mooring_hardware-section" style="display: none;" class="infomation">
+        <h2>mooring hardware:</h2>
+        <ul>
+            {% for step in project.mooring_hardware_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="mooring_hardware">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- toe_rails -->
+    <div id="toe_rails-section" style="display: none;" class="infomation">
+        <h2>toe rails:</h2>
+        <ul>
+            {% for step in project.toe_rails_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="toe_rails">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- anchor_platform -->
+    <div id="anchor_platform-section" style="display: none;" class="infomation">
+        <h2>anchor platform:</h2>
+        <ul>
+            {% for step in project.anchor_platform_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="anchor_platform">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- deck_floor_plan -->
+    <div id="deck_floor_plan-section" style="display: none;" class="infomation">
+        <h2>deck floor plan:</h2>
+        <ul>
+            {% for step in project.deck_floor_plan_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="deck_floor_plan">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!--Finish subsection section above-->
+
+
+    <!--Subsection section hull-->
+    <!-- transom -->
+    <div id="transom-section" style="display: none;" class="infomation">
+        <h2>transom:</h2>
+        <ul>
+            {% for step in project.transom_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="transom">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- blister_comment -->
+    <div id="blister_comment-section" style="display: none;" class="infomation">
+        <h2>blister comment:</h2>
+        <ul>
+            {% for step in project.blister_comment_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="blister_comment">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- bottom_paint -->
+    <div id="bottom_paint-section" style="display: none;" class="infomation">
+        <h2>bottom paint:</h2>
+        <ul>
+            {% for step in project.bottom_paint_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="bottom_paint">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- structural_members -->
+    <div id="structural_members-section" style="display: none;" class="infomation">
+        <h2>structural members:</h2>
+        <ul>
+            {% for step in project.structural_members_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="structural_members">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- deck -->
+    <div id="deck-section" style="display: none;" class="infomation">
+        <h2>deck:</h2>
+        <ul>
+            {% for step in project.deck_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="deck">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- design -->
+    <div id="design-section" style="display: none;" class="infomation">
+        <h2>design:</h2>
+        <ul>
+            {% for step in project.design_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="design">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- layout_overview -->
+    <div id="layout_overview-section" style="display: none;" class="infomation">
+        <h2>layout overview:</h2>
+        <ul>
+            {% for step in project.layout_overview_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="layout_overview">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!--Finishsubsection section hull-->
+
+
+    <!--Subsection section INTRODUCTION-->
+    <!-- intended_use -->
+    <div id="intended_use-section" style="display: none;" class="infomation">
+        <h2>intended use:</h2>
+        <ul>
+            {% for step in project.intended_use_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="intended_use">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- surveyor_qualifications -->
+    <div id="surveyor_qualifications-section" style="display: none;" class="infomation">
+        <h2>surveyor qualifications:</h2>
+        <ul>
+            {% for step in project.surveyor_qualifications_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="surveyor_qualifications">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- report_file_no -->
+    <div id="report_file_no-section" style="display: none;" class="infomation">
+        <h2>report file no:</h2>
+        <ul>
+            {% for step in project.report_file_no_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="report_file_no">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- circumstances_of_survey -->
+    <div id="circumstances_of_survey-section" style="display: none;" class="infomation">
+        <h2>Circumstances of Survey:</h2>
+        <ul>
+            {% for step in project.circumstances_of_survey_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="circumstances_of_survey">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- purpose_of_survey -->
+    <div id="purpose_of_survey-section" style="display: none;" class="infomation">
+        <h2>purpose of survey:</h2>
+        <ul>
+            {% for step in project.purpose_of_survey_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="purpose_of_survey">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- certification -->
+    <div id="certification-section" style="display: none;" class="infomation">
+        <h2>certification:</h2>
+        <ul>
+            {% for step in project.certification_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="certification">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!--Finish subsection section INTRODUCTION-->
+
+
+    <!--Subsection section INF-->
+    <!-- Секция Gen Info -->
+    <div id="gen_info-section" class="infomation" style="display: none;">
+        <h2>Gen Info:</h2>
+        <div>
+            <p><strong>City:</strong> {{ project.city }}</p>
+            <p><strong>Phone:</strong> {{ project.phone }}</p>
+            <p><strong>Post:</strong> {{ project.post }}</p>
+            <p><strong>vessel name:</strong> {{ project.vessel_name }}</p>
+        </div>
+        <ul>
+            {% for step in project.gen_info_steps %}
+                <li>{{ step }}</li>
+                <form method="POST" action="/edit_project/{{ project_id }}/delete_step">
+                    <input type="hidden" name="step_to_delete" value="{{ step }}">
+                    <input type="hidden" name="section" value="gen_info">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
+    <!--Finish subsection section INF-->
+    
+    <!---------------------            Форма для добавления шага в текущий раздел                --------------------->
+    <div id="add-step-form-container" style="display: none;">
+        <h2>Add Step:</h2>
+        <form method="POST" action="/edit_project/{{ project_id }}/add_step">
+            <label for="step_description">Step Description:</label>
+            <input type="text" id="step_description" name="step_description">
+
+            <label for="image">Image:</label>
+            <input type="file" id="image" name="image">
+            
+            <input type="hidden" name="section" id="current_section" value="">
+            <input type="submit" value="Add Step">
+        </form>
+    </div>
+
+    <!--  тестирую      -->
+    <div id="createSectionModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCreateSectionModal()">&times;</span>
+            <h2 class="formablack">Create New Section</h2>
+            <form action="{{ url_for('add_section', project_id=project_id) }}" method="post">
+                <label class="formablack" for="section_name">Имя раздела:</label>
+                <input type="text" name="section_name" id="section_name" required>
+                <button type="submit">Name section</button>
+            </form>
+        </div>
+    </div>
+    {% for section in project.sections %}
+        <div id="createSubsectionModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCreateSubsectionModal()">&times;</span>
+            <h2 class="formablack">Create New Subsection</h2>
+            <form action="{{ url_for('add_subsection', project_id=project_id) }}" method="post">
+                <input type="hidden" name="section_name" id="section_name_input" value="">
+                <label class="formablack" for="subsection_name">Имя подраздела:</label>
+                <input type="text" name="subsection_name" id="subsection_name" required>
+                <button class="formablack" type="submit">Добавить подраздел</button>
+            </form>
+        </div>
+        </div>
+        {% for subsection in section.subsections %}
+            <div id="createCellModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeCreateCellModal()">&times;</span>
+                    <h2 class="formablack">Create New Cell</h2>
+                    <form action="{{ url_for('add_cell', project_id=project_id) }}" method="post">
+                        <input type="hidden" name="section_name" id="section_name_input" value="">
+                        <input type="hidden" name="subsection_name" id="subsection_name_input" value="">
+                        <label class="formablack" for="cell_name">Имя ячейки:</label>
+                        <input type="text" name="cell_name" id="cell_name" required>
+                        <label class="formablack" for="cell_description">Описание ячейки:</label>
+                        <textarea class="cellcoment" name="cell_description" id="cell_description" rows="4" required></textarea>
+                        <button class="formablack" type="submit">Добавить ячейку</button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    {% endfor %}
+    <!--
+    <h3>Sections:</h3>
+    <h2>Добавить раздел</h2>
+    <form action="{{ url_for('add_section', project_id=project_id) }}" method="post">
+        <label for="section_name">Имя раздела:</label>
+        <input type="text" name="section_name" id="section_name" required>
+        <button type="submit">Добавить раздел</button>
+    </form>
+    <ul>
+        {% for section in project.sections %}
+            <!-- Кнопка удаления раздела --><!--
+            <form action="{{ url_for('delete_section', project_id=project_id, section_name=section.name) }}" method="post">
+                <button type="submit">Удалить раздел</button>
+            </form>
+            <li>{{ section.name }}</li>
+                <h2>Добавить подраздел</h2>
+                <form action="{{ url_for('add_subsection', project_id=project_id) }}" method="post">
+                    <input type="hidden" name="section_name" value="{{ section.name }}">
+                    <label for="subsection_name">Имя подраздела:</label>
+                    <input type="text" name="subsection_name" id="subsection_name" required>
+                    <button type="submit">Добавить подраздел</button>
+                </form>
+            {% if section.subsections %}
+                <ul>
+                    {% for subsection in section.subsections %}
+                        <!-- Кнопка удаления подраздела --><!--
+                        <form action="{{ url_for('delete_subsection', project_id=project_id, section_name=section.name, subsection_name=subsection.name) }}" method="post">
+                            <button type="submit">Удалить подраздел</button>
+                        </form>
+                        <li>{{ subsection.name }}</li>
+                        <h2>Добавить ячейку</h2>
+                        <form action="{{ url_for('add_cell', project_id=project_id) }}" method="post">
+                            <input type="hidden" name="section_name" value="{{ section.name }}">
+                            <input type="hidden" name="subsection_name" value="{{ subsection.name }}">
+                            <label for="cell_name">Имя ячейки:</label>
+                            <input type="text" name="cell_name" id="cell_name" required>
+                            <label for="cell_description">Описание ячейки:</label>
+                            <textarea name="cell_description" id="cell_description" rows="4" required></textarea>
+                            <button type="submit">Добавить ячейку</button>
+                        </form>
+                        {% if subsection.cells %}
+                            <ul>
+                                {% for cell in subsection.cells %}
+                                    <!-- Кнопка удаления ячейки --><!---
+                                    <form action="{{ url_for('delete_cell', project_id=project_id, section_name=section.name, subsection_name=subsection.name, cell_name=cell.name) }}" method="post">
+                                        <button type="submit">Удалить ячейку</button>
+                                    </form>
+                                    
+                                    <li>{{ cell.name }} - {{ cell.description }}</li>
+                                    {% if cell.rating %}
+                                        <p><strong>Рейтинг:</strong> {{ cell.rating }}</p>
+                                        <!-- Кнопка удаления рейтинга --><!--
+                                        <form action="{{ url_for('delete_rating', project_id=project_id, section_name=section.name, subsection_name=subsection.name, cell_name=cell.name) }}" method="post">
+                                            <button type="submit">Удалить рейтинг</button>
+                                        </form>
+                                    {% endif %}
+                                    {% if cell.comment %}
+                                        <p><strong>Комментарий:</strong> {{ cell.comment }}</p>
+                                        <!-- Кнопка удаления комментария --><!-- 
+                                        <form action="{{ url_for('delete_comment', project_id=project_id, section_name=section.name, subsection_name=subsection.name, cell_name=cell.name, comment_index=loop.index0) }}" method="post">
+                                            <button type="submit">Удалить комментарий</button>
+                                        </form>
+                                    {% endif %}
+                                    <h2>Добавить комментарий к ячейке</h2>
+                                    <form action="{{ url_for('add_comment', project_id=project_id, section_name=section.name, subsection_name=subsection.name, cell_name=cell.name) }}" method="post">
+                                        <label for="cell_comment">Комментарий:</label>
+                                        <textarea name="cell_comment" id="cell_comment" rows="4" required></textarea>
+                                        <button type="submit">Добавить комментарий</button>
+                                    </form>
+                                    <h2>Выбрать рейтинг ячейки</h2>
+                                    <form action="{{ url_for('add_rating', project_id=project_id, section_name=section.name, subsection_name=subsection.name, cell_name=cell.name) }}" method="post">
+                                        <label for="cell_rating">Рейтинг:</label>
+                                        <select name="cell_rating" id="cell_rating" required>
+                                            <option value="good">Хорошо</option>
+                                            <option value="average">Средне</option>
+                                            <option value="bad">Плохо</option>
+                                        </select>
+                                        <button type="submit">Выбрать рейтинг</button>
+                                    </form>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endfor %}
+    </ul>
+
+    <!-- JavaScript для обновления значения скрытого поля section при переключении разделов -->
+
+        
+    <script src="{{ url_for('static', filename='js/my_script.js') }}"></script>
+
+    
+</body>
+</html>
+
