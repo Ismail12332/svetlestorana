@@ -127,6 +127,8 @@
         console.log("certification_steps:", certification_steps);
         console.log("purpose_of_survey_steps:", purpose_of_survey_steps);
         console.log("circumstances_of_survey_steps:", circumstances_of_survey_steps);
+        console.log('Current Section:', currentSection);
+        console.log('Opened Subsection:', openedSubsection);
     }
 
 
@@ -482,10 +484,10 @@
                 const data = await response.json();
                 if (data.status === "success") {
                     console.log(data,'Step added successfully');
-                    
+                    project.set(data.updated_project);
                     // Опционально: обновите данные проекта в Svelte store
                     // project.set(data.project);
-
+                    stepDescription = "";
                     console.log(data.section)
                     // Опционально: очистите описание шага для будущих использований
                 } else {
@@ -561,7 +563,12 @@
 
     function showSubsections(sectionName) {
         closeAllSections();
+        hideAddStepForm();
+        closeSubsectionStandart();
 
+        document.querySelectorAll('.infomation').forEach((section) => {
+            section.style.display = 'none';
+        });
         var subsectionsDiv = document.getElementById("subsections-" + sectionName);
         var sectionButton = document.getElementById(sectionName + "-button");
 
@@ -595,34 +602,34 @@
     var currentOpenSubsection = null;
     var currentOpenSubsectionButton = null;
 
-function showSubsection(subsection) {
-    hideAddStepForm()
-    closeSubsectionStandart()
+    function showSubsection(subsection) {
+    hideAddStepForm();
+    closeSubsectionStandart();
     var subsectionElement = document.getElementById(subsection + "-section");
     var subsectionButton = document.getElementById(subsection + "-button");
 
-    // Если текущий подраздел открыт, смените его цвет обратно
-    if (currentOpenSubsectionButton && currentOpenSubsectionButton !== subsectionButton) {
-        currentOpenSubsectionButton.classList.remove("button-clicked");
-    }
-
-    // Переключите класс кнопки подраздела
-    subsectionButton.classList.toggle("button-clicked");
-
-    // Сохраните текущую кнопку подраздела
-    currentOpenSubsectionButton = subsectionButton;
-
+    // Если текущий подраздел открыт, скройте форму добавления шага
     if (currentOpenSubsection === subsection) {
-        // If the same sub-section is clicked again, close it
-        subsectionElement.style.display = "none";
+        hideAddStepForm();
         currentOpenSubsection = null;
+
+        // Смените цвет кнопки подраздела обратно
+        if (currentOpenSubsectionButton) {
+            currentOpenSubsectionButton.classList.remove("button-clicked");
+        }
+
+        // Очистите текущую кнопку подраздела
+        currentOpenSubsectionButton = null;
+
+        // Скройте текущий подраздел
+        subsectionElement.style.display = "none";
     } else {
-        // Close the previously open sub-section, if any
+        // Закройте предыдущий открытый подраздел, если есть
         if (currentOpenSubsection) {
             document.getElementById(currentOpenSubsection + "-section").style.display = "none";
         }
 
-        // Close other subsections with the class "infomation"
+        // Закройте другие подразделы с классом "infomation"
         var allSubsections = document.querySelectorAll(".infomation");
         allSubsections.forEach(function (subsection) {
             if (subsection.id !== subsection + "-section") {
@@ -630,16 +637,22 @@ function showSubsection(subsection) {
             }
         });
 
-        // Open the clicked sub-section
+        // Откройте выбранный подраздел
         subsectionElement.style.display = "block";
         currentOpenSubsection = subsection;
-    }
 
-    // Show the "Add Step" form and set the current section
-    var addStepFormContainer = document.getElementById("add-step-form-container");
-    addStepFormContainer.style.display = "block";
-    var currentSectionField = document.getElementById("current_section");
-    currentSectionField.value = subsection;
+        // Переключите класс кнопки подраздела
+        subsectionButton.classList.add("button-clicked");
+
+        // Сохраните текущую кнопку подраздела
+        currentOpenSubsectionButton = subsectionButton;
+
+        // Покажите форму "Add Step" и установите текущий раздел
+        var addStepFormContainer = document.getElementById("add-step-form-container");
+        addStepFormContainer.style.display = "block";
+        var currentSectionField = document.getElementById("current_section");
+        currentSectionField.value = subsection;
+    }
 }
 
     function resetButtonColor(sectionName) {
@@ -987,6 +1000,10 @@ function showSafetyEquipmentSections() {
     function showSubsectionStandart(sectionName, subsectionName) {
         hideAddStepForm();
 
+        document.querySelectorAll('.infomation').forEach((section) => {
+            section.style.display = 'none';
+        });
+
         // Logic to display the form
         var addStepFormContainer = document.getElementById("add-step-form-container_standard");
         addStepFormContainer.style.display = "block";
@@ -997,6 +1014,10 @@ function showSafetyEquipmentSections() {
 
         var currentSubsectionField = document.getElementById("current_subsection");
         currentSubsectionField.value = subsectionName;
+
+        openedSubsection = subsectionName;
+
+        currentSection = sectionName;
 
         console.log(currentSectionField.value, currentSubsectionField.value);
         // Additional logic if needed
@@ -1011,6 +1032,9 @@ function showSafetyEquipmentSections() {
         var OpenSection = document.getElementById(".information")
         OpenSection.style.display = "none";
     }
+    
+    let openedSubsection = null;
+    
 </script>
 
 <style>
@@ -1199,16 +1223,7 @@ h3 {
         <button id="intended_use-button" on:click={() => showSubsection('intended_use')}>INTENDED USE</button>
         {#if $project && $project.introduction && $project.introduction.length > 0}
             {#each $project.introduction as subsection}
-                <div>
                     <button on:click={() => showSubsectionStandart('introduction', subsection.name)}>{subsection.name}</button>
-                    {#if subsection.subsections && subsection.subsections.length > 0}
-                        <ul>
-                            {#each subsection.subsections as step}
-                                <li>{step.step_description}</li>
-                            {/each}
-                        </ul>
-                    {/if}
-                </div>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('introduction')}>+</button>
@@ -1399,30 +1414,7 @@ h3 {
         </div>
     </div>
 
-    <!--Добавление шага-->
-    <div id="add-step-form-container" style="display: none;">
-        <h2>Add Step:</h2>
-        <form on:submit={addStep}><!--<form method="POST" action="/edit_project/{{ project_id }}/add_step">-->
-            <label for="step_description">Step Description:</label>
-            <input type="text" id="step_description" name="step_description">
-            
-            <input type="hidden" name="section" id="current_section" value="">
-            <button type="submit">Add Step</button>
-        </form>
-    </div>
-
-    <!--Добавление шага стандартные разделы-->
-    <div id="add-step-form-container_standard" style="display: none;">
-        <h2>Add Step standard:</h2>
-        <form on:submit={addStepStandard}>
-            <label for="step_description">Step Description:</label>
-            <input type="text" id="step_description" name="step_description" bind:value={stepDescription}>
-            
-            <input type="hidden" name="section" id="current_section" bind:value={currentSection}>
-            <input type="hidden" name="subsection" id="current_subsection" bind:value={currentSubsection}>
-            <button type="submit">Add Step</button>
-        </form>
-    </div>
+    
 
     <!--вывод и удаление шага-->
     <!--INTRODUCTION-->
@@ -2793,5 +2785,44 @@ h3 {
         {:else}
             <p>No steps added yet.</p>
         {/if}
+    </div>
+    <!--Добавление шага-->
+    <div id="add-step-form-container" style="display: none;">
+        <h2>Add Step:</h2>
+        <form on:submit={addStep}><!--<form method="POST" action="/edit_project/{{ project_id }}/add_step">-->
+            <label for="step_description">Step Description:</label>
+            <input type="text" id="step_description" name="step_description">
+            
+            <input type="hidden" name="section" id="current_section" value="">
+            <button type="submit">Add Step</button>
+        </form>
+    </div>
+    
+    <!--Добавление шага стандартные разделы-->
+    <div id="add-step-form-container_standard" style="display: none;">
+        <h2>Add Step standard:</h2>
+        {#if $project && $project[currentSection] && $project[currentSection].length > 0}
+            {#each $project[currentSection] as subsection}
+                <div>
+                    {#if openedSubsection === subsection.name}
+                        {#if subsection.subsections && subsection.subsections.length > 0}
+                            <ul>
+                                {#each subsection.subsections as step}
+                                    <li>{step.step_description}</li>
+                                {/each}
+                            </ul>
+                        {/if}
+                    {/if}
+                </div>
+            {/each}
+        {/if}
+        <form on:submit={addStepStandard}>
+            <label for="step_description">Step Description:</label>
+            <input type="text" id="step_description" name="step_description" bind:value={stepDescription}>
+            
+            <input type="hidden" name="section" id="current_section" bind:value={currentSection}>
+            <input type="hidden" name="subsection" id="current_subsection" bind:value={currentSubsection}>
+            <button type="submit">Add Step</button>
+        </form>
     </div>
 </main>

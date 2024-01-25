@@ -180,8 +180,9 @@ def create_app():
             {"$push": {f"{section_name}.$.subsections": {"step_description": step_description}}}
         )
 
+        updated_project = app.db.projects.find_one({"_id": project_id})
         updated_project["_id"] = str(updated_project["_id"])
-
+        print('твой проект',updated_project)
         return jsonify({
             "status": "success",
             "message": "Step added successfully",
