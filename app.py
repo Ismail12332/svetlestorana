@@ -169,12 +169,27 @@ def create_app():
             return jsonify({"status": "error", "message": "Invalid project_id"}), 400
         
         section_name = request.form.get("section_name")
+        subsection_name = request.form.get("subsection_name")
         step_description = request.form.get("step_description")
 
         # Добавьте ваш код для обработки данных и добавления шага в соответствующий подраздел
-        print(section_name,step_description)
+        print(section_name,subsection_name, step_description)
 
-        return jsonify({"status": "success", "message": "Step added successfully","step_description": step_description,"section_name": section_name,})
+        updated_project = app.db.projects.find_one_and_update(
+            {"_id": project_id, f"{section_name}.name": subsection_name},
+            {"$push": {f"{section_name}.$.subsections": {"step_description": step_description}}}
+        )
+
+        updated_project["_id"] = str(updated_project["_id"])
+
+        return jsonify({
+            "status": "success",
+            "message": "Step added successfully",
+            "step_description": step_description,
+            "section_name": section_name,
+            "subsection_name": subsection_name,
+            "updated_project": updated_project
+        })
         
     #Дабовление и удаление записей в разделах
     @app.route("/edit_project/<project_id>/add_step", methods=["POST"])

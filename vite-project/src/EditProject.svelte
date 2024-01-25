@@ -467,14 +467,15 @@
     async function addStepStandard(event) {
         event.preventDefault();
         const currentSection = document.getElementById("current_section").value;
-        console.log(`section_name=${encodeURIComponent(currentSection)}&step_description=${encodeURIComponent(stepDescription)}`);
+        const currentSubsection = document.getElementById("current_subsection").value;
+        console.log(`section_name=${encodeURIComponent(currentSection)}&subsection_name=${encodeURIComponent(currentSubsection)}&step_description=${encodeURIComponent(stepDescription)}`);
         try {
             const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/add_step_standard`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
                 },
-                body: `section_name=${encodeURIComponent(currentSection)}&step_description=${encodeURIComponent(stepDescription)}`,
+                body: `section_name=${encodeURIComponent(currentSection)}&subsection_name=${encodeURIComponent(currentSubsection)}&step_description=${encodeURIComponent(stepDescription)}`,
             });
 
             if (response.ok) {
@@ -981,18 +982,24 @@ function showSafetyEquipmentSections() {
         return currentOpenSection && currentOpenSection === sectionName ? "block" : "none";
     }
     
-    let stepsForCurrentSubsection = [];
+    let currentSubsection = '';
 
-    function showSubsectionStandart(subsectionName) {
-        hideAddStepForm()
-        // Логика для отображения формы
+    function showSubsectionStandart(sectionName, subsectionName) {
+        hideAddStepForm();
+
+        // Logic to display the form
         var addStepFormContainer = document.getElementById("add-step-form-container_standard");
         addStepFormContainer.style.display = "block";
-        var currentSectionField = document.getElementById("current_section");
-        currentSectionField.value = subsectionName;
-        console.log(currentSectionField.value)
 
-        // Дополнительная логика, если необходимо
+        // Set values for both section and subsection
+        var currentSectionField = document.getElementById("current_section");
+        currentSectionField.value = sectionName;
+
+        var currentSubsectionField = document.getElementById("current_subsection");
+        currentSubsectionField.value = subsectionName;
+
+        console.log(currentSectionField.value, currentSubsectionField.value);
+        // Additional logic if needed
     }
 
     function closeSubsectionStandart () {
@@ -1192,7 +1199,16 @@ h3 {
         <button id="intended_use-button" on:click={() => showSubsection('intended_use')}>INTENDED USE</button>
         {#if $project && $project.introduction && $project.introduction.length > 0}
             {#each $project.introduction as subsection}
-                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
+                <div>
+                    <button on:click={() => showSubsectionStandart('introduction', subsection.name)}>{subsection.name}</button>
+                    {#if subsection.subsections && subsection.subsections.length > 0}
+                        <ul>
+                            {#each subsection.subsections as step}
+                                <li>{step.step_description}</li>
+                            {/each}
+                        </ul>
+                    {/if}
+                </div>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('introduction')}>+</button>
@@ -1208,7 +1224,7 @@ h3 {
         <button id="transom-button" on:click={() => showSubsection('transom')}>TRANSOM</button>
         {#if $project && $project.hull && $project.hull.length > 0}
             {#each $project.hull as subsection}
-                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart('hull',subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('hull')}>+</button>
@@ -1228,7 +1244,7 @@ h3 {
         <button id="swim_platform-button" on:click={() => showSubsection('swim_platform')}>SWIM PLATFORM</button>
         {#if $project && $project.above && $project.above.length > 0}
             {#each $project.above as subsection}
-                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart('above',subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('above')}>+</button>
@@ -1244,7 +1260,7 @@ h3 {
         <button id="note-button" on:click={() => showSubsection('note')}>NOTE</button>
         {#if $project && $project.below && $project.below.length > 0}
             {#each $project.below as subsection}
-                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart('below',subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('below')}>+</button>
@@ -1257,7 +1273,7 @@ h3 {
         <button id="additional_remarks-button" on:click={() => showSubsection('additional_remarks')}>ADDITIONAL REMARKS</button>
         {#if $project && $project.cathodic && $project.cathodic.length > 0}
             {#each $project.cathodic as subsection}
-                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart('cathodic',subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('cathodic')}>+</button>
@@ -1271,7 +1287,7 @@ h3 {
         <button id="other_electronics_controls-button" on:click={() => showSubsection('other_electronics_controls')}>OTHER ELECTRONICS & CONTROLS</button>
         {#if $project && $project.helm && $project.helm.length > 0}
             {#each $project.helm as subsection}
-                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart('helm',subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('helm')}>+</button>
@@ -1285,7 +1301,7 @@ h3 {
         <button id="climate_control-button" on:click={() => showSubsection('climate_control')}>CLIMATE CONTROL</button>
         {#if $project && $project.cabin && $project.cabin.length > 0}
             {#each $project.cabin as subsection}
-                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart('cabin',subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('cabin')}>+</button>
@@ -1298,7 +1314,7 @@ h3 {
         <button id="generator-button" on:click={() => showSubsection('generator')}>GENERATOR</button>
         {#if $project && $project.electrical && $project.electrical.length > 0}
             {#each $project.electrical as subsection}
-                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart('electrical',subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('electrical')}>+</button>
@@ -1314,7 +1330,7 @@ h3 {
         <button id="shafting_propellers-button" on:click={() => showSubsection('shafting_propellers')}>SHAFTING & PROPELLER(S)</button>
         {#if $project && $project.inboard && $project.inboard.length > 0}
             {#each $project.inboard as subsection}
-                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart('inboard',subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('inboard')}>+</button>
@@ -1326,7 +1342,7 @@ h3 {
         <button id='steering_components-button' on:click={() => showSubsection('steering_components')}>STEERING SYSTEM COMPONENTS</button>
         {#if $project && $project.steering && $project.steering.length > 0}
             {#each $project.steering as subsection}
-                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart('steering',subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('steering')}>+</button>
@@ -1339,7 +1355,7 @@ h3 {
         <button id='holding_tank_black_water-button' on:click={() => showSubsection('holding_tank_black_water')}>HOLDING TANK(S)-BLACK WATER</button>
         {#if $project && $project.tankage && $project.tankage.length > 0}
             {#each $project.tankage as subsection}
-                <button id='holding_tank_black_water-button' on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
+                <button id='holding_tank_black_water-button' on:click={() => showSubsectionStandart('tankage',subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('tankage')}>+</button>
@@ -1364,7 +1380,7 @@ h3 {
         <button id='auxiliary_safety_equipment-button' on:click={() => showSubsection('auxiliary_safety_equipment')}>AUXILIARY SAFETY EQUIPMENT</button>
         {#if $project && $project.safety && $project.safety.length > 0}
             {#each $project.safety as subsection}
-                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart('safety',subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('safety')}>+</button>
@@ -1398,11 +1414,12 @@ h3 {
     <!--Добавление шага стандартные разделы-->
     <div id="add-step-form-container_standard" style="display: none;">
         <h2>Add Step standard:</h2>
-        <form on:submit={addStepStandard}><!--<form method="POST" action="/edit_project/{{ project_id }}/add_step">-->
+        <form on:submit={addStepStandard}>
             <label for="step_description">Step Description:</label>
             <input type="text" id="step_description" name="step_description" bind:value={stepDescription}>
             
             <input type="hidden" name="section" id="current_section" bind:value={currentSection}>
+            <input type="hidden" name="subsection" id="current_subsection" bind:value={currentSubsection}>
             <button type="submit">Add Step</button>
         </form>
     </div>
