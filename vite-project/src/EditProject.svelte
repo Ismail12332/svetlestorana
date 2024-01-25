@@ -463,6 +463,41 @@
         currentSection = "";
     }
 
+
+    async function addStepStandard(event) {
+        event.preventDefault();
+        const currentSection = document.getElementById("current_section").value;
+        console.log(`section_name=${encodeURIComponent(currentSection)}&step_description=${encodeURIComponent(stepDescription)}`);
+        try {
+            const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/add_step_standard`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: `section_name=${encodeURIComponent(currentSection)}&step_description=${encodeURIComponent(stepDescription)}`,
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.status === "success") {
+                    console.log(data,'Step added successfully');
+                    
+                    // Опционально: обновите данные проекта в Svelte store
+                    // project.set(data.project);
+
+                    console.log(data.section)
+                    // Опционально: очистите описание шага для будущих использований
+                } else {
+                    console.error("Failed to add step:", data.message);
+                }
+            } else {
+                console.error("Failed to add step:", response.statusText);
+            }
+        } catch (error) {
+            console.error("Error during add step:", error);
+        }
+    }
+
     async function addSubsectionStandard(sectionName) {
         try {
             const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/add_subsection_standard`, {
@@ -482,7 +517,7 @@
                     // based on your application's requirements.
                     // For example, you can call a function to refresh project data.
                     // refreshProjectData();
-                    closeCreateSubsectionModal();
+                    closeCreateSubsectionModalStandard();
                 } else {
                     console.error("Failed to add subsection:", data.message);
                 }
@@ -560,6 +595,8 @@
     var currentOpenSubsectionButton = null;
 
 function showSubsection(subsection) {
+    hideAddStepForm()
+    closeSubsectionStandart()
     var subsectionElement = document.getElementById(subsection + "-section");
     var subsectionButton = document.getElementById(subsection + "-button");
 
@@ -623,10 +660,19 @@ function resetSubsectionButtonColor() {
 }
 
 function closeOtherSections(exceptSectionId) {
+    // Закрытие разделов
     var sections = document.querySelectorAll(".osnova");
     sections.forEach(function (section) {
         if (section.id !== exceptSectionId) {
             section.style.display = "none";
+        }
+    });
+
+    // Закрытие подразделов
+    var subsections = document.querySelectorAll(".infomation");
+    subsections.forEach(function (subsection) {
+        if (subsection.id !== exceptSectionId) {
+            subsection.style.display = "none";
         }
     });
 }
@@ -648,6 +694,7 @@ function closeSubsections(sectionId) {
 
 
 function showIntroductionSections() {
+    closeSubsectionStandart();
     // Закройте другие разделы
     closeOtherSections("introduction-sections");
     closeSubsections("introduction-sections");
@@ -674,6 +721,7 @@ function showIntroductionSections() {
 }
 
 function showElectricalSystemsSections() {
+    closeSubsectionStandart();
     closeOtherSections("electrical-systems-sections");
     closeSubsections("electrical-systems-sections");
     hideAddStepForm();
@@ -702,6 +750,7 @@ function showElectricalSystemsSections() {
 
 //HullSections
 function showHullSections() {
+    closeSubsectionStandart();
     // Закройте другие разделы
     closeOtherSections("hull-sections");
     closeSubsections("hull-sections");
@@ -729,6 +778,7 @@ function showHullSections() {
 
 
 function showAboveSections() {
+    closeSubsectionStandart();
     // Закройте другие разделы
     closeOtherSections("above-sections");
     closeSubsections("above-sections");
@@ -756,6 +806,7 @@ function showAboveSections() {
 
 // Повторите тот же шаблон для других функций
 function showBelowSections() {
+    closeSubsectionStandart();
     closeOtherSections("below-sections");
     closeSubsections("below-sections");
     hideAddStepForm();
@@ -777,6 +828,7 @@ function showBelowSections() {
 
 // Повторите тот же шаблон для других функций
 function showCathodicProtectionSections() {
+    closeSubsectionStandart();
     closeOtherSections("cathodic-protection-sections");
     closeSubsections("cathodic-protection-sections");
     hideAddStepForm();
@@ -798,6 +850,7 @@ function showCathodicProtectionSections() {
 
 //Helm Sections
 function showHelmStationSections() {
+    closeSubsectionStandart();
     closeOtherSections("helm-station-sections");
     closeSubsections("helm-station-sections");
     hideAddStepForm();
@@ -817,6 +870,7 @@ function showHelmStationSections() {
 }
 
 function showCabinInteriorSections() {
+    closeSubsectionStandart();
     closeOtherSections("cabin-interior-sections");
     closeSubsections("cabin-interior-sections");
     hideAddStepForm();
@@ -836,6 +890,7 @@ function showCabinInteriorSections() {
 }
 
 function showInboardPropulsionSections() {
+    closeSubsectionStandart();
     closeOtherSections("inboard-propulsion-sections");
     closeSubsections("inboard-propulsion-sections");
     hideAddStepForm();
@@ -855,6 +910,7 @@ function showInboardPropulsionSections() {
 }
 
 function showSteeringSystemSections() {
+    closeSubsectionStandart();
     closeOtherSections("steering-system-sections");
     closeSubsections("steering-system-sections");
     hideAddStepForm();
@@ -875,6 +931,7 @@ function showSteeringSystemSections() {
 
 
 function showTankageSections() {
+    closeSubsectionStandart();
     closeOtherSections("tankage-sections");
     closeSubsections("tankage-sections");
     hideAddStepForm();
@@ -894,6 +951,7 @@ function showTankageSections() {
 }
 
 function showSafetyEquipmentSections() {
+    closeSubsectionStandart();
     closeOtherSections("safety-equipment-sections");
     closeSubsections("safety-equipment-sections");
     hideAddStepForm();
@@ -923,6 +981,29 @@ function showSafetyEquipmentSections() {
         return currentOpenSection && currentOpenSection === sectionName ? "block" : "none";
     }
     
+    let stepsForCurrentSubsection = [];
+
+    function showSubsectionStandart(subsectionName) {
+        hideAddStepForm()
+        // Логика для отображения формы
+        var addStepFormContainer = document.getElementById("add-step-form-container_standard");
+        addStepFormContainer.style.display = "block";
+        var currentSectionField = document.getElementById("current_section");
+        currentSectionField.value = subsectionName;
+        console.log(currentSectionField.value)
+
+        // Дополнительная логика, если необходимо
+    }
+
+    function closeSubsectionStandart () {
+        var addStepFormContainer = document.getElementById("add-step-form-container_standard");
+        addStepFormContainer.style.display = "none";
+    }
+
+    function closeEverethingOpenSection () {
+        var OpenSection = document.getElementById(".information")
+        OpenSection.style.display = "none";
+    }
 </script>
 
 <style>
@@ -1111,7 +1192,7 @@ h3 {
         <button id="intended_use-button" on:click={() => showSubsection('intended_use')}>INTENDED USE</button>
         {#if $project && $project.introduction && $project.introduction.length > 0}
             {#each $project.introduction as subsection}
-                <button on:click={() => showSubsection(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('introduction')}>+</button>
@@ -1127,7 +1208,7 @@ h3 {
         <button id="transom-button" on:click={() => showSubsection('transom')}>TRANSOM</button>
         {#if $project && $project.hull && $project.hull.length > 0}
             {#each $project.hull as subsection}
-                <button on:click={() => showSubsection(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('hull')}>+</button>
@@ -1147,7 +1228,7 @@ h3 {
         <button id="swim_platform-button" on:click={() => showSubsection('swim_platform')}>SWIM PLATFORM</button>
         {#if $project && $project.above && $project.above.length > 0}
             {#each $project.above as subsection}
-                <button on:click={() => showSubsection(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('above')}>+</button>
@@ -1163,7 +1244,7 @@ h3 {
         <button id="note-button" on:click={() => showSubsection('note')}>NOTE</button>
         {#if $project && $project.below && $project.below.length > 0}
             {#each $project.below as subsection}
-                <button on:click={() => showSubsection(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('below')}>+</button>
@@ -1176,7 +1257,7 @@ h3 {
         <button id="additional_remarks-button" on:click={() => showSubsection('additional_remarks')}>ADDITIONAL REMARKS</button>
         {#if $project && $project.cathodic && $project.cathodic.length > 0}
             {#each $project.cathodic as subsection}
-                <button on:click={() => showSubsection(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('cathodic')}>+</button>
@@ -1190,7 +1271,7 @@ h3 {
         <button id="other_electronics_controls-button" on:click={() => showSubsection('other_electronics_controls')}>OTHER ELECTRONICS & CONTROLS</button>
         {#if $project && $project.helm && $project.helm.length > 0}
             {#each $project.helm as subsection}
-                <button on:click={() => showSubsection(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('helm')}>+</button>
@@ -1204,7 +1285,7 @@ h3 {
         <button id="climate_control-button" on:click={() => showSubsection('climate_control')}>CLIMATE CONTROL</button>
         {#if $project && $project.cabin && $project.cabin.length > 0}
             {#each $project.cabin as subsection}
-                <button on:click={() => showSubsection(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('cabin')}>+</button>
@@ -1217,7 +1298,7 @@ h3 {
         <button id="generator-button" on:click={() => showSubsection('generator')}>GENERATOR</button>
         {#if $project && $project.electrical && $project.electrical.length > 0}
             {#each $project.electrical as subsection}
-                <button on:click={() => showSubsection(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('electrical')}>+</button>
@@ -1233,7 +1314,7 @@ h3 {
         <button id="shafting_propellers-button" on:click={() => showSubsection('shafting_propellers')}>SHAFTING & PROPELLER(S)</button>
         {#if $project && $project.inboard && $project.inboard.length > 0}
             {#each $project.inboard as subsection}
-                <button on:click={() => showSubsection(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('inboard')}>+</button>
@@ -1245,7 +1326,7 @@ h3 {
         <button id='steering_components-button' on:click={() => showSubsection('steering_components')}>STEERING SYSTEM COMPONENTS</button>
         {#if $project && $project.steering && $project.steering.length > 0}
             {#each $project.steering as subsection}
-                <button on:click={() => showSubsection(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('steering')}>+</button>
@@ -1258,7 +1339,7 @@ h3 {
         <button id='holding_tank_black_water-button' on:click={() => showSubsection('holding_tank_black_water')}>HOLDING TANK(S)-BLACK WATER</button>
         {#if $project && $project.tankage && $project.tankage.length > 0}
             {#each $project.tankage as subsection}
-                <button id='holding_tank_black_water-button' on:click={() => showSubsection(subsection.name)}>{subsection.name}</button>
+                <button id='holding_tank_black_water-button' on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('tankage')}>+</button>
@@ -1283,7 +1364,7 @@ h3 {
         <button id='auxiliary_safety_equipment-button' on:click={() => showSubsection('auxiliary_safety_equipment')}>AUXILIARY SAFETY EQUIPMENT</button>
         {#if $project && $project.safety && $project.safety.length > 0}
             {#each $project.safety as subsection}
-                <button on:click={() => showSubsection(subsection.name)}>{subsection.name}</button>
+                <button on:click={() => showSubsectionStandart(subsection.name)}>{subsection.name}</button>
             {/each}
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('safety')}>+</button>
@@ -1302,7 +1383,6 @@ h3 {
         </div>
     </div>
 
-    
     <!--Добавление шага-->
     <div id="add-step-form-container" style="display: none;">
         <h2>Add Step:</h2>
@@ -1311,6 +1391,18 @@ h3 {
             <input type="text" id="step_description" name="step_description">
             
             <input type="hidden" name="section" id="current_section" value="">
+            <button type="submit">Add Step</button>
+        </form>
+    </div>
+
+    <!--Добавление шага стандартные разделы-->
+    <div id="add-step-form-container_standard" style="display: none;">
+        <h2>Add Step standard:</h2>
+        <form on:submit={addStepStandard}><!--<form method="POST" action="/edit_project/{{ project_id }}/add_step">-->
+            <label for="step_description">Step Description:</label>
+            <input type="text" id="step_description" name="step_description" bind:value={stepDescription}>
+            
+            <input type="hidden" name="section" id="current_section" bind:value={currentSection}>
             <button type="submit">Add Step</button>
         </form>
     </div>
@@ -1399,7 +1491,7 @@ h3 {
     </div>
     <!-- report_file_no-section -->
     <div id="report_file_no-section" style="display: none;" class="infomation">
-        <h2>circumstances of survey:</h2>
+        <h2>report file no:</h2>
         {#if $project && $project.report_file_no_steps && $project.report_file_no_steps.length > 0}
             <ul>
                 {#each $project.report_file_no_steps as step}
@@ -1417,7 +1509,7 @@ h3 {
     </div>
     <!-- surveyor_qualifications-section -->
     <div id="surveyor_qualifications-section" style="display: none;" class="infomation">
-        <h2>circumstances of survey:</h2>
+        <h2>surveyor qualifications</h2>
         {#if $project && $project.surveyor_qualifications_steps && $project.surveyor_qualifications_steps.length > 0}
             <ul>
                 {#each $project.surveyor_qualifications_steps as step}
@@ -1435,7 +1527,7 @@ h3 {
     </div>
     <!-- intended_use-section -->
     <div id="intended_use-section" style="display: none;" class="infomation">
-        <h2>circumstances of survey:</h2>
+        <h2>intended use</h2>
         {#if $project && $project.intended_use_steps && $project.intended_use_steps.length > 0}
             <ul>
                 {#each $project.intended_use_steps as step}
@@ -1454,7 +1546,7 @@ h3 {
     <!--Hull, DECK & SUPERSTRUCTURE-->
     <!-- layout_overview-section -->
     <div id="layout_overview-section" style="display: none;" class="infomation">
-        <h2>layout_overview</h2>
+        <h2>layout overview</h2>
         {#if $project && $project.layout_overview_steps && $project.layout_overview_steps.length > 0}
             <ul>
                 {#each $project.layout_overview_steps as step}
@@ -1707,7 +1799,7 @@ h3 {
     </div>
     <!-- ngine_hatch-section -->
     <div id="ngine_hatch-section" style="display: none;" class="infomation">
-        <h2>cockpit equipment</h2>
+        <h2>ngine hatch</h2>
         {#if $project && $project.ngine_hatch_steps && $project.ngine_hatch_steps.length > 0}
             <ul>
                 {#each $project.ngine_hatch_steps as step}
@@ -1725,7 +1817,7 @@ h3 {
     </div>
     <!--above_draw_water_line-section -->
     <div id="above_draw_water_line-section" style="display: none;" class="infomation">
-        <h2>cockpit equipment</h2>
+        <h2>above draw water line</h2>
         {#if $project && $project.above_draw_water_line_steps && $project.above_draw_water_line_steps.length > 0}
             <ul>
                 {#each $project.above_draw_water_line_steps as step}
@@ -1743,7 +1835,7 @@ h3 {
     </div>
     <!--boarding_ladder-section -->
     <div id="boarding_ladder-section" style="display: none;" class="infomation">
-        <h2>cockpit equipment</h2>
+        <h2>boarding ladder</h2>
         {#if $project && $project.boarding_ladder_steps && $project.boarding_ladder_steps.length > 0}
             <ul>
                 {#each $project.boarding_ladder_steps as step}
@@ -1780,7 +1872,7 @@ h3 {
     <!--Below -->
     <!--below_draw_water-section -->
     <div id="below_draw_water-section" style="display: none;" class="infomation">
-        <h2>swim platformt</h2>
+        <h2>below draw water</h2>
         {#if $project && $project.below_draw_water_steps && $project.below_draw_water_steps.length > 0}
             <ul>
                 {#each $project.below_draw_water_steps as step}
@@ -1798,7 +1890,7 @@ h3 {
     </div>
     <!--thru_hull_strainers-section -->
     <div id="thru_hull_strainers-section" style="display: none;" class="infomation">
-        <h2>swim platformt</h2>
+        <h2>sthru hull strainers</h2>
         {#if $project && $project.thru_hull_strainers_steps && $project.thru_hull_strainers_steps.length > 0}
             <ul>
                 {#each $project.thru_hull_strainers_steps as step}
@@ -1816,7 +1908,7 @@ h3 {
     </div>
     <!--transducer-section -->
     <div id="transducer-section" style="display: none;" class="infomation">
-        <h2>swim platformt</h2>
+        <h2>transducer</h2>
         {#if $project && $project.transducer_steps && $project.transducer_steps.length > 0}
             <ul>
                 {#each $project.transducer_steps as step}
@@ -1834,7 +1926,7 @@ h3 {
     </div>
     <!--sea_valves-section -->
     <div id="sea_valves-section" style="display: none;" class="infomation">
-        <h2>swim platformt</h2>
+        <h2>sea valves</h2>
         {#if $project && $project.sea_valves_steps && $project.sea_valves_steps.length > 0}
             <ul>
                 {#each $project.sea_valves_steps as step}
@@ -1852,7 +1944,7 @@ h3 {
     </div>
     <!--sea_strainers-section -->
     <div id="sea_strainers-section" style="display: none;" class="infomation">
-        <h2>swim platformt</h2>
+        <h2>sea strainers</h2>
         {#if $project && $project.sea_strainers_steps && $project.sea_strainers_steps.length > 0}
             <ul>
                 {#each $project.sea_strainers_steps as step}
@@ -2124,7 +2216,7 @@ h3 {
     </div>
     <!--water_closets-section -->
     <div id="water_closets-section" style="display: none;" class="infomation">
-        <h2>galley dinette</h2>
+        <h2>water closets</h2>
         {#if $project && $project.water_closets_steps && $project.water_closets_steps.length > 0}
             <ul>
                 {#each $project.water_closets_steps as step}
@@ -2288,7 +2380,7 @@ h3 {
     </div>
     <!--reverse_gears-section -->
     <div id="reverse_gears-section" style="display: none;" class="infomation">
-        <h2>other note</h2>
+        <h2>reverse gears</h2>
         {#if $project && $project.reverse_gears_steps && $project.reverse_gears_steps.length > 0}
             <ul>
                 {#each $project.reverse_gears_steps as step}
@@ -2561,7 +2653,7 @@ h3 {
     </div>
     <!--ignition_protection-section -->
     <div id="ignition_protection-section" style="display: none;" class="infomation">
-        <h2>engine ventilation</h2>
+        <h2>ignition protection</h2>
         {#if $project && $project.ignition_protection_steps && $project.ignition_protection_steps.length > 0}
             <ul>
                 {#each $project.ignition_protection_steps as step}
@@ -2615,7 +2707,7 @@ h3 {
     </div>
     <!--fire_fighting_equipment-section -->
     <div id="fire_fighting_equipment-section" style="display: none;" class="infomation">
-        <h2>waste management plan</h2>
+        <h2>fire fighting equipment</h2>
         {#if $project && $project.fire_fighting_equipment_steps && $project.fire_fighting_equipment_steps.length > 0}
             <ul>
                 {#each $project.fire_fighting_equipment_steps as step}
@@ -2633,7 +2725,7 @@ h3 {
     </div>
     <!--bilge_pumps-section -->
     <div id="bilge_pumps-section" style="display: none;" class="infomation">
-        <h2>waste management plan</h2>
+        <h2>bilge pumps</h2>
         {#if $project && $project.bilge_pumps_steps && $project.bilge_pumps_steps.length > 0}
             <ul>
                 {#each $project.bilge_pumps_steps as step}
