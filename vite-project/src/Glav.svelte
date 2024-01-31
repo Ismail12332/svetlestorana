@@ -20,11 +20,6 @@
         fetchProjects();
     });
 
-    afterUpdate(() => {
-        // После обновления компонента выполните повторный запрос к серверу
-        fetchProjects();
-    });
-
 
     const createProject = async (event) => {
         event.preventDefault(); // Prevent the default form submission
@@ -105,7 +100,7 @@
     };
 
     // Fetch projects when the component is mounted
-    //onMount(fetchProjects);
+    
     
 </script>
 
@@ -141,14 +136,18 @@ p,ul {
 
 .project-info {
     display: flex;
-    margin: 3%;
+    margin: 2.9%;
     flex: 1; /* Равное распределение доступного пространства между дочерними элементами */
     border: 1px solid #000; /* Добавьте границу, чтобы лучше видеть разделение */
     padding: 10px;
     background-color: #191d32;
     justify-content: space-around;
 }
-    
+
+.footer{
+    height: 287px;
+    background: linear-gradient(to bottom, #011529, #011a2b);
+}
 </style>
 
 <!-- <head>
@@ -243,4 +242,7 @@ p,ul {
                 {/if}
             </ul>
         <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script> -->
+            <div class='footer'>
+
+            </div>
     </main>

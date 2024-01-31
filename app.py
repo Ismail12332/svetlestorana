@@ -5,7 +5,11 @@ from bson import ObjectId
 from datetime import datetime
 from dotenv import load_dotenv
 from flask_cors import CORS,cross_origin
+from urllib.parse import quote
+from b2sdk.v2 import *
 import secrets
+import uuid
+import pprint
 
 load_dotenv()
 
@@ -25,6 +29,17 @@ def create_app():
     app.db = client.my_database
     users_collection = app.db.users
     projects_collection = app.db.projects
+
+    # Создание клиента Backblaze B2
+    info = InMemoryAccountInfo()
+    b2_api = B2Api(info)
+    application_key_id = '4ad4332a1370'
+    application_key = '004787d4a1ca0ed42646b85d3f9cf9523f3c5847a4'
+    b2_api.authorize_account("production", application_key_id, application_key)
+
+    # Получение бакета (папки) для хранения изображений
+    bucket_name = 'Survzila'
+    bucket = b2_api.get_bucket_by_name(bucket_name)
 
 
 
@@ -159,6 +174,109 @@ def create_app():
 
         return jsonify({"status": "success", "project": project})
 
+    #Добавление изображения для подразделов стандартных разделов
+    @app.route('/upload_image/<project_id>/<section_name>/<subsection_name>', methods=['POST'])
+    def upload_image(project_id, section_name, subsection_name):
+        try:
+            project_id = ObjectId(project_id)
+        except Exception as e:
+            return jsonify({"status": "error", "message": "Invalid project_id"}), 400
+        
+        if 'file' not in request.files:
+            return jsonify({"status": "error", "message": "No file part"}), 400
+
+        file = request.files['file']
+
+        if file.filename == '':
+            return jsonify({"status": "error", "message": "No selected file"}), 400
+
+        if file:
+            file_data = file.read()
+            file_name = file.filename
+            b2_file_name = str(uuid.uuid4())
+
+            bucket.upload_bytes(
+                data_bytes=file_data,
+                file_name=b2_file_name
+            )
+
+            file_info = {
+                'file_name': file_name,
+                'b2_file_name': b2_file_name,
+                'b2_url': 'https://f004.backblazeb2.com/file/Survzila/' + quote(b2_file_name)
+            }
+            app.db.files.insert_one(file_info)
+
+            # Обновление проекта с добавлением информации о загруженном изображении
+            app.db.projects.update_one(
+                {"_id": project_id, f"{section_name}.name": subsection_name},
+                {"$push": {f"{section_name}.$.subsections": {"image_url": file_info['b2_url']}}}
+            )
+
+            updated_project = app.db.projects.find_one({"_id": project_id})
+            updated_project["_id"] = str(updated_project["_id"])
+            
+            return jsonify({
+                "status": "success",
+                "message": "Image uploaded successfully",
+                "image_url": file_info['b2_url'],
+                "updated_project": updated_project
+            }), 200
+        else:
+            return jsonify({"status": "error", "message": "Failed to upload file"}), 400
+        
+
+    @app.route('/edit_project/<project_id>/<section_name>/<subsection_name>/add_image', methods=['POST'])
+    def add_image(project_id,section_name, subsection_name):
+        try:
+            project_id = ObjectId(project_id)
+        except Exception as e:
+            return jsonify({"status": "error", "message": "Invalid project_id"}), 400
+
+        # Получение файла из запроса
+        if 'file' not in request.files:
+            return jsonify({"status": "error", "message": "No file part"}), 400
+
+        file = request.files['file']
+
+        if file.filename == '':
+            return jsonify({"status": "error", "message": "No selected file"}), 400
+
+        if file:
+            file_data = file.read()
+            file_name = file.filename
+            b2_file_name = str(uuid.uuid4())
+
+            bucket.upload_bytes(
+                data_bytes=file_data,
+                file_name=b2_file_name
+            )
+
+            file_info = {
+                'file_name': file_name,
+                'b2_file_name': b2_file_name,
+                'b2_url': 'https://f004.backblazeb2.com/file/Survzila/' + quote(b2_file_name)
+            }
+
+            print(file_info)
+            # Обновление проекта с добавлением информации о загруженном изображении
+            app.db.projects.update_one(
+                {"_id": project_id, "sections.name": section_name, "sections.subsections.name": subsection_name},
+                {"$push": {"sections.$.subsections.$[elem].images": {"image_url": file_info['b2_url']}}},
+                array_filters=[{"elem.name": subsection_name}]
+            )
+
+            updated_project = app.db.projects.find_one({"_id": project_id})
+            updated_project["_id"] = str(updated_project["_id"])
+            pprint.pprint(updated_project)
+            return jsonify({
+                "status": "success",
+                "message": "Image uploaded successfully",
+                "image_url": file_info['b2_url'],
+                "updated_project": updated_project
+            }), 200
+        else:
+            return jsonify({"status": "error", "message": "Failed to upload file"}), 400
 
     #Дабовление и удаление записей в стандартные разделы разделах
     @app.route("/edit_project/<project_id>/add_step_standard", methods=["POST"])

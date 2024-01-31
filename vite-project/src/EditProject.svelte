@@ -1035,13 +1035,70 @@ function showSafetyEquipmentSections() {
     
     let openedSubsection = null;
     
+    async function addImage(event) {
+        event.preventDefault();
+
+        const currentSection = document.getElementById("current_section").value;
+        const currentSubsection = document.getElementById("current_subsection").value;
+        const fileInput = document.getElementById('image_upload_input');
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        try {
+            const response = await fetch(`http://127.0.0.1:5000/upload_image/${$project._id}/${currentSection}/${currentSubsection}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log(data);
+                project.set(data.updated_project);
+                // Обработка успешного ответа
+            } else {
+                console.error('Failed to upload image:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error during image upload:', error);
+        }
+    }
+
+    async function addStepsImage(event, sectionName, subsectionName) {
+        event.preventDefault();
+        
+        try {
+            const fileInput = document.getElementById('image_upload_input');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]); // Первый файл из выбранных изображений
+
+            const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/${sectionName}/${subsectionName}/add_image`, {
+                method: "POST",
+                body: formData,
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.status === "success") {
+                    project.set(data.updated_project);
+                    // Обновление данных в компоненте после успешной загрузки изображения
+                    // Добавьте логику для сохранения URL изображения в соответствующем разделе и подразделе
+                } else {
+                    console.error("Failed to upload image:", data.message);
+                }
+            } else {
+                console.error("Failed to upload image:", response.statusText);
+            }
+        } catch (error) {
+            console.error("Error during image upload:", error);
+        }
+    }
 </script>
 
 <style>
 
     main {
         width: 100%;
-        height: 1200px;
+        height: 100%;
         color: rgb(255, 255, 255);
         background: linear-gradient(to bottom, #011a2b, #011529);
     }
@@ -1120,6 +1177,14 @@ h3 {
     color: #000000;
 }
 
+img {
+    max-width: 200px; /* Максимальная ширина изображения будет равна ширине контейнера */
+    max-height: 150px;/* Автоматическое вычисление высоты, чтобы сохранить пропорции */
+}
+
+.footer{
+    height: 570px;
+}
 </style>
 
 
@@ -1197,10 +1262,22 @@ h3 {
                                         {/each}
                                         </div>
                                     {/if}
+                                    {#if subsection.images && subsection.images.length > 0}
+                                        <div class="image-list">
+                                            {#each subsection.images as image}
+                                                <img src={image.image_url} alt="Image">
+                                            {/each}
+                                        </div>
+                                    {/if}
                                         <form on:submit|preventDefault={(event) => addSteps(event, section.name, subsection.name)}>
                                             <label for="step_description">Step Description:</label>
                                             <input type="text" id="step_description" bind:value={stepDescription}>
                                             <button type="submit">Add Step</button>
+                                        </form>
+                                        <form on:submit|preventDefault={(event) => addStepsImage(event, section.name, subsection.name)}>
+                                            <label for="image">Select Image:</label>
+                                            <input type="file" id="image_upload_input" name="image">
+                                            <button type="submit">Upload Image</button>
                                         </form>
                                     {/if}
                                 </div>
@@ -2806,11 +2883,18 @@ h3 {
                 <div>
                     {#if openedSubsection === subsection.name}
                         {#if subsection.subsections && subsection.subsections.length > 0}
-                            <ul>
+                            <div>
                                 {#each subsection.subsections as step}
-                                    <li>{step.step_description}</li>
+                                    <!-- Проверка, что это изображение -->
+                                    {#if step.image_url}
+                                        <img src={step.image_url} alt="Image">
+                                    {/if}
+                                    <!-- Если это не изображение, выведите описание шага -->
+                                    {#if step.step_description}
+                                        <p>{step.step_description}</p>
+                                    {/if}
                                 {/each}
-                            </ul>
+                            </div>
                         {/if}
                     {/if}
                 </div>
@@ -2824,5 +2908,15 @@ h3 {
             <input type="hidden" name="subsection" id="current_subsection" bind:value={currentSubsection}>
             <button type="submit">Add Step</button>
         </form>
+        <form on:submit={addImage}>
+            <label for="image_upload_input">Upload Image:</label>
+            <input type="hidden" name="section" id="current_section" bind:value={currentSection}>
+            <input type="hidden" name="subsection" id="current_subsection" bind:value={currentSubsection}>
+            <input type="file" id="image_upload_input" name="image_upload_input">
+            <button type="submit">Upload Image</button>
+        </form>
+    </div>
+    <div class='footer'>
+
     </div>
 </main>
