@@ -1092,6 +1092,59 @@ function showSafetyEquipmentSections() {
             console.error("Error during image upload:", error);
         }
     }
+
+    async function deleteImage(imageUrl, sectionName, subsectionName) {
+        try {
+            const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/${sectionName}/${subsectionName}/delete_image`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ "image_url": imageUrl })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.status === "success") {
+                    project.set(data.updated_project);
+                    // Обработка успешного удаления изображения
+                } else {
+                    console.error("Failed to delete image:", data.message);
+                }
+            } else {
+                console.error("Failed to delete image:", response.statusText);
+            }
+        } catch (error) {
+            console.error("Error during image deletion:", error);
+        }
+    }
+    
+    async function deleteImages(imageUrl, sectionName, subsectionName) {
+    try {
+        const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/${sectionName}/${subsectionName}/delete_images`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "image_url": imageUrl })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.status === "success") {
+                project.set(data.updated_project);
+                // Обновление пользовательского интерфейса после удаления фотографии
+                // Например, обновление списка фотографий или перерисовка компонента
+            } else {
+                console.error("Failed to delete image:", data.message);
+            }
+        } else {
+            console.error("Failed to delete image:", response.statusText);
+        }
+    } catch (error) {
+        console.error("Error during image deletion:", error);
+    }
+}
 </script>
 
 <style>
@@ -1266,6 +1319,7 @@ img {
                                         <div class="image-list">
                                             {#each subsection.images as image}
                                                 <img src={image.image_url} alt="Image">
+                                                <button on:click={() => deleteImage(image.image_url,section.name, subsection.name)}>Delete</button>
                                             {/each}
                                         </div>
                                     {/if}
@@ -2888,6 +2942,7 @@ img {
                                     <!-- Проверка, что это изображение -->
                                     {#if step.image_url}
                                         <img src={step.image_url} alt="Image">
+                                        <button on:click={() => deleteImages(step.image_url, currentSection, subsection.name)}>Delete Photo</button>
                                     {/if}
                                     <!-- Если это не изображение, выведите описание шага -->
                                     {#if step.step_description}

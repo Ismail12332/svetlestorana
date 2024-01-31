@@ -226,6 +226,31 @@ def create_app():
             return jsonify({"status": "error", "message": "Failed to upload file"}), 400
         
 
+    #delite
+    @app.route('/edit_project/<project_id>/<section_name>/<subsection_name>/delete_images', methods=['POST'])
+    def delete_images(project_id, section_name, subsection_name):
+        try:
+            project_id = ObjectId(project_id)
+        except Exception as e:
+            return jsonify({"status": "error", "message": "Invalid project_id"}), 400
+        
+        image_url = request.json.get('image_url')
+
+            # Удаление изображения из базы данных проекта
+        result = app.db.projects.update_one(
+            {"_id": project_id, f"{section_name}.name": subsection_name},
+            {"$pull": {f"{section_name}.$.subsections": {"image_url": image_url}}}
+        )
+        updated_project = app.db.projects.find_one({"_id": project_id})
+        updated_project["_id"] = str(updated_project["_id"])
+
+        if result.modified_count > 0:
+            return jsonify({"status": "success", "message": "Image deleted successfully","updated_project": updated_project}), 200
+        else:
+            return jsonify({"status": "error", "message": "Failed to delete image"}), 400
+
+        
+
     @app.route('/edit_project/<project_id>/<section_name>/<subsection_name>/add_image', methods=['POST'])
     def add_image(project_id,section_name, subsection_name):
         try:
@@ -277,6 +302,31 @@ def create_app():
             }), 200
         else:
             return jsonify({"status": "error", "message": "Failed to upload file"}), 400
+        
+
+    @app.route('/edit_project/<project_id>/<section_name>/<subsection_name>/delete_image', methods=['POST'])
+    def delete_image(project_id, section_name, subsection_name):
+        try:
+            project_id = ObjectId(project_id)
+        except Exception as e:
+            return jsonify({"status": "error", "message": "Invalid project_id"}), 400
+
+        image_url = request.json.get('image_url')  # Получение URL изображения из запроса
+
+        # Удаление изображения из подраздела в базе данных
+        result = app.db.projects.update_one(
+            {"_id": project_id, f"sections.name": section_name, f"sections.subsections.name": subsection_name},
+            {"$pull": {f"sections.$.subsections.$[elem].images": {"image_url": image_url}}},
+            array_filters=[{"elem.name": subsection_name}]
+        )
+        updated_project = app.db.projects.find_one({"_id": project_id})
+        updated_project["_id"] = str(updated_project["_id"])
+
+        if result.modified_count > 0:
+            return jsonify({"status": "success", "message": "Image deleted successfully","updated_project": updated_project}), 200
+        else:
+            return jsonify({"status": "error", "message": "Failed to delete image"}), 400
+
 
     #Дабовление и удаление записей в стандартные разделы разделах
     @app.route("/edit_project/<project_id>/add_step_standard", methods=["POST"])
@@ -310,6 +360,7 @@ def create_app():
             "updated_project": updated_project
         })
         
+
     #Дабовление и удаление записей в разделах
     @app.route("/edit_project/<project_id>/add_step", methods=["POST"])
     def add_step(project_id):
@@ -344,6 +395,7 @@ def create_app():
 
         return jsonify({"status": "success", "message": "Step added successfully","updated_project": updated_project})
 
+
     @app.route("/edit_project/<project_id>/add_subsection_step", methods=["POST"])
     def add_subsection_step(project_id):
         try:
@@ -371,6 +423,7 @@ def create_app():
         updated_project['_id'] = str(updated_project['_id'])
 
         return jsonify({"status": "success", "message": "Step added successfully", "updated_project": updated_project})
+
 
     @app.route("/edit_project/<project_id>/delete_step", methods=["POST"])
     def delete_step(project_id):
