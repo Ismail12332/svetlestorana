@@ -138,7 +138,33 @@ def create_app():
             "city": city,
             "phone": phone,
             "post": post,
-            "sections": [],
+            "sections": {
+                    "introduction": {"gen_info": {"images": [],"steps": []},"certification": {"images": [],"steps": []},"purpose_of_survey": {"images": [],"steps": []},"circumstances_of_survey": {"images": [],"steps": []},"report_file_no": {"images": [],"steps": []},"surveyor_qualifications": { "images": [],"steps": []},"intended_use": {"images": [],"steps": []},
+                    },
+                    "hull": { "layout_overview": {"images": [],"steps": []},"design": {"images": [],"steps": []},"deck": {"images": [],"steps": []},"structural_members": {"images": [],"steps": []},"bottom_paint": {"images": [],"steps": []},"blister_comment": {"images": [],"steps": []},"transom": {"images": [],"steps": []},
+                    },
+                    "above": { "deck_floor_plan": {"images": [],"steps": []},"anchor_platform": {"images": [],"steps": []},"toe_rails": {"images": [],"steps": []},"mooring_hardware": {"images": [],"steps": []},"hatches": {"images": [],"steps": []},"exterior_seating": {"images": [],"steps": []},"cockpit_equipment": {"images": [],"steps": []},"ngine_hatch": {"images": [],"steps": []},"above_draw_water_line": {"images": [],"steps": []},"boarding_ladder": {"images": [],"steps": []},"swim_platform": {"images": [],"steps": []},
+                    },
+                    "below": { "below_draw_water": {"images": [],"steps": []},"thru_hull_strainers": {"images": [],"steps": []},"transducer": {"images": [],"steps": []},"sea_valves": {"images": [],"steps": []},"sea_strainers": {"images": [],"steps": []},"trim_tabs": {"images": [],"steps": []},"note": {"images": [],"steps": []},
+                    },
+                    "cathodic-protection": { "bonding_system": {"images": [],"steps": []},"anodes": {"images": [],"steps": []},"lightning_protection": {"images": [],"steps": []},"additional_remarks": {"images": [],"steps": []},
+                    },
+                    "helm-station": { "helm_station": {"images": [],"steps": []},"throttle_shift_controls": {"images": [],"steps": []},"engine_room_blowers": {"images": [],"steps": []},"engine_status": {"images": [],"steps": []},"other_electronics_controls": {"images": [],"steps": []},
+                    },
+                    "cabin-interior": { "entertainment_berthing": {"images": [],"steps": []},"interior_lighting": {"images": [],"steps": []},"galley_dinette": {"images": [],"steps": []},"water_closets": {"images": [],"steps": []},"climate_control": {"images": [],"steps": []},
+                    },
+                    "electrical-systems": { "dc_systems_type": {"images": [],"steps": []},"ac_systems": {"images": [],"steps": []},"generator": {"images": [],"steps": []},
+                    },
+                    "inboard-propulsion": { "engines": {"images": [],"steps": []},"serial_numbers": {"images": [],"steps": []},"engine_hours": {"images": [],"steps": []},"other_note": {"images": [],"steps": []},"reverse_gears": {"images": [],"steps": []},"shafting_propellers": {"images": [],"steps": []},
+                    },
+                    "steering-system": { "manufacture": {"images": [],"steps": []},"steering_components": {"images": [],"steps": []},
+                    },
+                    "tankage": { "fuel_tank": {"images": [],"steps": []},"potable_water_system": {"images": [],"steps": []},"holding_tank_black_water": {"images": [],"steps": []},
+                    },
+                    "safety-equipment": { "navigational_lights": {"images": [],"steps": []},"life_jackets": {"images": [],"steps": []},"throwable_pfd": {"images": [],"steps": []},"visual_distress_signals": {"images": [],"steps": []},"sound_devices": {"images": [],"steps": []},"uscg_placards": {"images": [],"steps": []},"flame_arrestors": {"images": [],"steps": []},"engine_ventilation": {"images": [],"steps": []},"ignition_protection": {"images": [],"steps": []},"inland_navigational_rule_book": {"images": [],"steps": []},"waste_management_plan": {"images": [],"steps": []},"fire_fighting_equipment": {"images": [],"steps": []},"bilge_pumps": {"images": [],"steps": []},"ground_tackle_windlass": {"images": [],"steps": []},"auxiliary_safety_equipment": {"images": [],"steps": []},
+                    },
+                },
+            "sectionse": [],
             "vessel_name": vessel_name,
             "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "user_id": user_id
@@ -286,8 +312,8 @@ def create_app():
             print(file_info)
             # Обновление проекта с добавлением информации о загруженном изображении
             app.db.projects.update_one(
-                {"_id": project_id, "sections.name": section_name, "sections.subsections.name": subsection_name},
-                {"$push": {"sections.$.subsections.$[elem].images": {"image_url": file_info['b2_url']}}},
+                {"_id": project_id, "sectionse.name": section_name, "sectionse.subsections.name": subsection_name},
+                {"$push": {"sectionse.$.subsections.$[elem].images": {"image_url": file_info['b2_url']}}},
                 array_filters=[{"elem.name": subsection_name}]
             )
 
@@ -315,8 +341,8 @@ def create_app():
 
         # Удаление изображения из подраздела в базе данных
         result = app.db.projects.update_one(
-            {"_id": project_id, f"sections.name": section_name, f"sections.subsections.name": subsection_name},
-            {"$pull": {f"sections.$.subsections.$[elem].images": {"image_url": image_url}}},
+            {"_id": project_id, f"sectionse.name": section_name, f"sectionse.subsections.name": subsection_name},
+            {"$pull": {f"sectionse.$.subsections.$[elem].images": {"image_url": image_url}}},
             array_filters=[{"elem.name": subsection_name}]
         )
         updated_project = app.db.projects.find_one({"_id": project_id})
@@ -361,7 +387,7 @@ def create_app():
         })
         
 
-    #Дабовление и удаление записей в разделах
+    #Дабовление и удаление записей в разделах (нужно переделать)--------------------------------------------------
     @app.route("/edit_project/<project_id>/add_step", methods=["POST"])
     def add_step(project_id):
         try:
@@ -369,31 +395,33 @@ def create_app():
         except Exception as e:
             return jsonify({"status": "error", "message": "Invalid project_id"}), 400
 
-        step_description = request.form.get("step_description")
-        section = request.form.get("section")
-
-        section_field = f"{section}_steps"
+        data = request.json
+        section = data.get("section")
+        subsection = data.get("subsection")
+        step_description = data.get("step_description")
+        print(section,subsection,step_description)
 
         try:
+            # Обновляем структуру базы данных, чтобы каждый раздел содержал список подразделов,
+            # а каждый подраздел содержал список шагов
             result = app.db.projects.update_one(
-                {"_id": project_id},
-                {"$push": {section_field: step_description}}
+                {"_id": project_id, f"sections.{section}.{subsection}": {"$exists": True}},
+                {"$push": {f"sections.{section}.{subsection}.steps": step_description}}
             )
+
             if result.modified_count == 0:
-                return jsonify({"status": "error", "message": "Project not found"}), 404
+                return jsonify({"status": "error", "message": "Project or section not found"}), 404
+
+            # Получаем обновленный проект после добавления шага
+            updated_project = app.db.projects.find_one({"_id": project_id})
+
+            # Преобразуем ObjectId в строку перед возвратом ответа JSON
+            updated_project["_id"] = str(updated_project["_id"])
+
+            return jsonify({"status": "success", "message": "Step added successfully", "updated_project": updated_project})
         except Exception as e:
             print("Error:", e)
             return jsonify({"status": "error", "message": "An error occurred"}), 500
-        
-        # Получите обновленный проект после добавления шага
-        updated_project = app.db.projects.find_one({"_id": project_id})
-
-        # Преобразуйте ObjectId в строку перед возвратом ответа JSON
-        updated_project["_id"] = str(updated_project["_id"])
-
-        print("Вот твоя поебота!!!!!!!!!!!!!!!!",updated_project)
-
-        return jsonify({"status": "success", "message": "Step added successfully","updated_project": updated_project})
 
 
     @app.route("/edit_project/<project_id>/add_subsection_step", methods=["POST"])
@@ -409,8 +437,8 @@ def create_app():
 
         try:
             result = app.db.projects.update_one(
-                {"_id": project_id, "sections.name": section_name},
-                {"$push": {"sections.$.subsections.$[s].cells": {"description": step_description}}},
+                {"_id": project_id, "sectionse.name": section_name},
+                {"$push": {"sectionse.$.subsections.$[s].cells": {"description": step_description}}},
                 array_filters=[{"s.name": subsection_name}]
             )
             if result.modified_count == 0:
@@ -423,7 +451,131 @@ def create_app():
         updated_project['_id'] = str(updated_project['_id'])
 
         return jsonify({"status": "success", "message": "Step added successfully", "updated_project": updated_project})
+    
 
+    #Добавление изображения в основные подразделы (нужно переделать)-----------------------------------------
+    @app.route('/edit_project/<project_id>/add_imagestandard', methods=['POST'])
+    def add_imagestandard(project_id):
+        try:
+            project_id = ObjectId(project_id)
+        except Exception as e:
+            return jsonify({"status": "error", "message": "Invalid project_id"}), 400
+
+        # Получение файла из запроса
+        if 'image_upload' not in request.files:
+            return jsonify({"status": "error", "message": "No file part"}), 400
+
+        image_file = request.files['image_upload']
+
+        if image_file.filename == '':
+            return jsonify({"status": "error", "message": "No selected file"}), 400
+
+        if image_file:
+            file_data = image_file.read()
+            file_name = image_file.filename
+            b2_file_name = str(uuid.uuid4())
+
+            bucket.upload_bytes(
+                data_bytes=file_data,
+                file_name=b2_file_name
+            )
+
+            file_info = {
+                'file_name': file_name,
+                'b2_file_name': b2_file_name,
+                'b2_url': 'https://f004.backblazeb2.com/file/Survzila/' + quote(b2_file_name)
+            }
+            app.db.files.insert_one(file_info)
+
+            # Получение описания изображения и раздела
+            section = request.form.get('section')
+            subsection = request.form.get("subsection")
+            print(section,subsection)
+            section_field = f"{section}_steps"
+            # Обновление проекта с добавлением информации о загруженном изображении
+            app.db.projects.update_one(
+                {"_id": project_id, f"sections.{section}.{subsection}": {"$exists": True}},
+                {"$push": {f"sections.{section}.{subsection}.images": file_info["b2_url"]}}
+            )
+
+            updated_project = app.db.projects.find_one({"_id": project_id})
+            updated_project["_id"] = str(updated_project["_id"])
+
+            return jsonify({
+                "status": "success",
+                "message": "Image uploaded successfully",
+                "updated_project": updated_project
+            }), 200
+        else:
+            return jsonify({"status": "error", "message": "Failed to upload file"}), 400
+        
+
+    @app.route("/edit_project/<project_id>/remove_image", methods=["POST"])
+    def remove_image(project_id):
+        try:
+            project_id = ObjectId(project_id)
+        except Exception as e:
+            return jsonify({"status": "error", "message": "Invalid project_id"}), 400
+
+        data = request.json
+        section = data.get("section")
+        subsection = data.get("subsection")
+        image = data.get("image")
+
+        try:
+            # Удаляем изображение из списка
+            result = app.db.projects.update_one(
+                {"_id": project_id, f"sections.{section}.{subsection}.images": image},
+                {"$pull": {f"sections.{section}.{subsection}.images": image}}
+            )
+
+            if result.modified_count == 0:
+                return jsonify({"status": "error", "message": "Image not found"}), 404
+
+            # Получаем обновленный проект после удаления изображения
+            updated_project = app.db.projects.find_one({"_id": project_id})
+
+            # Преобразуем ObjectId в строку перед возвратом ответа JSON
+            updated_project["_id"] = str(updated_project["_id"])
+
+            return jsonify({"status": "success", "message": "Image removed successfully", "updated_project": updated_project})
+        except Exception as e:
+            print("Error:", e)
+            return jsonify({"status": "error", "message": "An error occurred"}), 500
+
+
+    @app.route("/edit_project/<project_id>/remove_step", methods=["POST"])
+    def remove_step(project_id):
+        try:
+            project_id = ObjectId(project_id)
+        except Exception as e:
+            return jsonify({"status": "error", "message": "Invalid project_id"}), 400
+
+        data = request.json
+        section = data.get("section")
+        subsection = data.get("subsection")
+        step_description = data.get("step_description")
+
+        try:
+            # Выполните удаление шага из базы данных
+            result = app.db.projects.update_one(
+                {"_id": project_id, f"sections.{section}.{subsection}.steps": step_description},
+                {"$pull": {f"sections.{section}.{subsection}.steps": step_description}}
+            )
+
+            if result.modified_count == 0:
+                return jsonify({"status": "error", "message": "Step not found"}), 404
+
+            # Получите обновленный проект после удаления шага
+            updated_project = app.db.projects.find_one({"_id": project_id})
+
+            # Преобразуйте ObjectId в строку перед возвратом ответа JSON
+            updated_project["_id"] = str(updated_project["_id"])
+
+            return jsonify({"status": "success", "message": "Step removed successfully", "updated_project": updated_project})
+        except Exception as e:
+            print("Error:", e)
+            return jsonify({"status": "error", "message": "An error occurred"}), 500
 
     @app.route("/edit_project/<project_id>/delete_step", methods=["POST"])
     def delete_step(project_id):
@@ -473,7 +625,7 @@ def create_app():
         try:
             result = app.db.projects.update_one(
                 {"_id": project_id},
-                {"$push": {"sections": {"name": section_name, "subsections": []}}}
+                {"$push": {"sectionse": {"name": section_name, "subsections": []}}}
             )
             if result.modified_count == 0:
                 return "Project not found", 404
@@ -521,8 +673,8 @@ def create_app():
 
         try:
             result = app.db.projects.update_one(
-                {"_id": project_id, "sections.name": section_name},
-                {"$push": {"sections.$.subsections": {"name": subsection_name, "cells": []}}}
+                {"_id": project_id, "sectionse.name": section_name},
+                {"$push": {"sectionse.$.subsections": {"name": subsection_name, "cells": []}}}
             )
             if result.modified_count == 0:
                 return "Section not found in the project", 404
