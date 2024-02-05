@@ -10,6 +10,8 @@ from b2sdk.v2 import *
 import secrets
 import uuid
 import pprint
+from openai import OpenAI
+import traceback
 
 load_dotenv()
 
@@ -29,6 +31,9 @@ def create_app():
     app.db = client.my_database
     users_collection = app.db.users
     projects_collection = app.db.projects
+    client = OpenAI(
+        api_key="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",
+    )
 
     # Создание клиента Backblaze B2
     info = InMemoryAccountInfo()
@@ -147,21 +152,21 @@ def create_app():
                     },
                     "below": { "below_draw_water": {"images": [],"steps": []},"thru_hull_strainers": {"images": [],"steps": []},"transducer": {"images": [],"steps": []},"sea_valves": {"images": [],"steps": []},"sea_strainers": {"images": [],"steps": []},"trim_tabs": {"images": [],"steps": []},"note": {"images": [],"steps": []},
                     },
-                    "cathodic-protection": { "bonding_system": {"images": [],"steps": []},"anodes": {"images": [],"steps": []},"lightning_protection": {"images": [],"steps": []},"additional_remarks": {"images": [],"steps": []},
+                    "cathodic": { "bonding_system": {"images": [],"steps": []},"anodes": {"images": [],"steps": []},"lightning_protection": {"images": [],"steps": []},"additional_remarks": {"images": [],"steps": []},
                     },
-                    "helm-station": { "helm_station": {"images": [],"steps": []},"throttle_shift_controls": {"images": [],"steps": []},"engine_room_blowers": {"images": [],"steps": []},"engine_status": {"images": [],"steps": []},"other_electronics_controls": {"images": [],"steps": []},
+                    "helm": { "helm_station": {"images": [],"steps": []},"throttle_shift_controls": {"images": [],"steps": []},"engine_room_blowers": {"images": [],"steps": []},"engine_status": {"images": [],"steps": []},"other_electronics_controls": {"images": [],"steps": []},
                     },
-                    "cabin-interior": { "entertainment_berthing": {"images": [],"steps": []},"interior_lighting": {"images": [],"steps": []},"galley_dinette": {"images": [],"steps": []},"water_closets": {"images": [],"steps": []},"climate_control": {"images": [],"steps": []},
+                    "cabin": { "entertainment_berthing": {"images": [],"steps": []},"interior_lighting": {"images": [],"steps": []},"galley_dinette": {"images": [],"steps": []},"water_closets": {"images": [],"steps": []},"climate_control": {"images": [],"steps": []},
                     },
-                    "electrical-systems": { "dc_systems_type": {"images": [],"steps": []},"ac_systems": {"images": [],"steps": []},"generator": {"images": [],"steps": []},
+                    "electrical": { "dc_systems_type": {"images": [],"steps": []},"ac_systems": {"images": [],"steps": []},"generator": {"images": [],"steps": []},
                     },
-                    "inboard-propulsion": { "engines": {"images": [],"steps": []},"serial_numbers": {"images": [],"steps": []},"engine_hours": {"images": [],"steps": []},"other_note": {"images": [],"steps": []},"reverse_gears": {"images": [],"steps": []},"shafting_propellers": {"images": [],"steps": []},
+                    "inboard": { "engines": {"images": [],"steps": []},"serial_numbers": {"images": [],"steps": []},"engine_hours": {"images": [],"steps": []},"other_note": {"images": [],"steps": []},"reverse_gears": {"images": [],"steps": []},"shafting_propellers": {"images": [],"steps": []},
                     },
-                    "steering-system": { "manufacture": {"images": [],"steps": []},"steering_components": {"images": [],"steps": []},
+                    "steering": { "manufacture": {"images": [],"steps": []},"steering_components": {"images": [],"steps": []},
                     },
-                    "tankage": { "fuel_tank": {"images": [],"steps": []},"potable_water_system": {"images": [],"steps": []},"holding_tank_black_water": {"images": [],"steps": []},
+                    "tankage": { "fuel": {"images": [],"steps": []},"potable_water_system": {"images": [],"steps": []},"holding_tank_black_water": {"images": [],"steps": []},
                     },
-                    "safety-equipment": { "navigational_lights": {"images": [],"steps": []},"life_jackets": {"images": [],"steps": []},"throwable_pfd": {"images": [],"steps": []},"visual_distress_signals": {"images": [],"steps": []},"sound_devices": {"images": [],"steps": []},"uscg_placards": {"images": [],"steps": []},"flame_arrestors": {"images": [],"steps": []},"engine_ventilation": {"images": [],"steps": []},"ignition_protection": {"images": [],"steps": []},"inland_navigational_rule_book": {"images": [],"steps": []},"waste_management_plan": {"images": [],"steps": []},"fire_fighting_equipment": {"images": [],"steps": []},"bilge_pumps": {"images": [],"steps": []},"ground_tackle_windlass": {"images": [],"steps": []},"auxiliary_safety_equipment": {"images": [],"steps": []},
+                    "safety": { "navigational_lights": {"images": [],"steps": []},"life_jackets": {"images": [],"steps": []},"throwable_pfd": {"images": [],"steps": []},"visual_distress_signals": {"images": [],"steps": []},"sound_devices": {"images": [],"steps": []},"uscg_placards": {"images": [],"steps": []},"flame_arrestors": {"images": [],"steps": []},"engine_ventilation": {"images": [],"steps": []},"ignition_protection": {"images": [],"steps": []},"inland_navigational_rule_book": {"images": [],"steps": []},"waste_management_plan": {"images": [],"steps": []},"fire_fighting_equipment": {"images": [],"steps": []},"bilge_pumps": {"images": [],"steps": []},"ground_tackle_windlass": {"images": [],"steps": []},"auxiliary_safety_equipment": {"images": [],"steps": []},
                     },
                 },
             "sectionse": [],
@@ -201,7 +206,7 @@ def create_app():
         return jsonify({"status": "success", "project": project})
 
     #Добавление изображения для подразделов стандартных разделов
-    @app.route('/upload_image/<project_id>/<section_name>/<subsection_name>', methods=['POST'])
+    @app.route('/edit_project/upload_image/<project_id>/<section_name>/<subsection_name>', methods=['POST'])
     def upload_image(project_id, section_name, subsection_name):
         try:
             project_id = ObjectId(project_id)
@@ -232,6 +237,7 @@ def create_app():
                 'b2_url': 'https://f004.backblazeb2.com/file/Survzila/' + quote(b2_file_name)
             }
             app.db.files.insert_one(file_info)
+            print(section_name, subsection_name)
 
             # Обновление проекта с добавлением информации о загруженном изображении
             app.db.projects.update_one(
@@ -698,13 +704,13 @@ def create_app():
         section_name = request.form.get("section_name")
         subsection_name = request.form.get("subsection_name")
 
-        print(section_name, subsection_name)
-        
         try:
+            # Добавляем новый подраздел в указанный раздел
             result = app.db.projects.update_one(
-                {"_id": project_id},
-                {"$push": {section_name: {"name": subsection_name, "subsections": []}}}
+                {"_id": project_id, f"sections.{section_name}": {"$exists": True}},
+                {"$set": { f"sections.{section_name}.{subsection_name}": {"images": [], "steps": []}}}
             )
+            
             if result.modified_count == 0:
                 return "Section not found in the project", 404
         except Exception as e:
@@ -714,8 +720,34 @@ def create_app():
         updated_project = app.db.projects.find_one({"_id": project_id})
         updated_project['_id'] = str(updated_project['_id'])
 
-        return jsonify({"status": "success", "message": "Hello bithes", "project": updated_project})
+        return jsonify({"status": "success", "message": "Subsection added successfully", "project": updated_project})
 
+
+    #чат джипити
+    @app.route('/edit_project/<project_id>/get-gpt-recommendations', methods=['POST'])
+    def get_gpt_recommendations(project_id):
+        data = request.json
+        section = data['section']
+        subsection = data['subsection']
+        prompt = f"Пожалуйста, дайте рекомендации для осмотра яхты для раздела {section}, подраздела {subsection}. Что стоит осмотреть и проверить при осмотре {subsection}?"
+
+        try:
+            response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "Ты помощник клиента в осмотре яхты указываешь на то что стоит проверить и как лучше проверять"},
+                {"role": "user", "content": prompt}
+            ]
+            )
+            print(response)
+            recommendations = response.choices[0].message.content.strip()
+            return jsonify({'recommendations': recommendations})
+        except Exception as e:
+            print(f"Произошла ошибка: {e}")
+            traceback.print_exc()
+            return jsonify({'error': str(e)}), 500
+            
+    
     #--удаление подраздела
     @app.route("/edit_project/<project_id>/delete_subsection/<section_name>/<subsection_name>", methods=["POST"])
     def delete_subsection(project_id, section_name, subsection_name):

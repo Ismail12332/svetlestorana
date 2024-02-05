@@ -330,38 +330,21 @@
         modal.style.display = "none";
     }
 
-    var currentOpenSubsection = null;
-    var currentOpenSubsectionButton = null;
 
-    function showSubsection(section,subsection) {
+
+    let openedSubsectionse = null;
+
+    function showSubsection(section, subsection) {
     hideAddStepForm();
     closeSubsectionStandart();
-    var subsectionElement = document.getElementById(subsection + "-section");
-    var subsectionButton = document.getElementById(subsection + "-button");
-
-    // Если текущий подраздел открыт, скройте форму добавления шага
-    if (currentOpenSubsection === subsection) {
-        hideAddStepForm();
-        currentOpenSubsection = null;
-
-        // Смените цвет кнопки подраздела обратно
-        if (currentOpenSubsectionButton) {
-            currentOpenSubsectionButton.classList.remove("button-clicked");
-        }
-
-        // Очистите текущую кнопку подраздела
-        currentOpenSubsectionButton = null;
-
-        // Скройте текущий подраздел
-        subsectionElement.style.display = "none";
+    stepRecommendations = '';
+    // Проверяем, открыт ли уже этот подраздел
+    if (openedSubsectionse === subsection) {
+        // Если подраздел уже открыт, закрываем его
+        openedSubsectionse = null;
     } else {
-        // Закройте предыдущий открытый подраздел, если есть
-        if (currentOpenSubsection) {
-            document.getElementById(currentOpenSubsection + "-section").style.display = "none";
-        }
-
-        // Сохраните текущую кнопку подраздела
-        currentOpenSubsectionButton = subsectionButton;
+        // Если подраздел не открыт, открываем его
+        openedSubsectionse = subsection;
 
         // Покажите форму "Add Step" и установите текущий раздел
         var addStepFormContainer = document.getElementById("add-step-form-container");
@@ -385,13 +368,6 @@
     });
 }
 
-function resetSubsectionButtonColor() {
-    // Найти все кнопки с классом "button-clicked" и удалить этот класс
-    var clickedButtons = document.querySelectorAll('.subsection-button-clicked');
-    clickedButtons.forEach(function (button) {
-        button.classList.remove('subsection-button-clicked');
-    });
-}
 
 function closeOtherSections(exceptSectionId) {
     // Закрытие разделов
@@ -717,41 +693,13 @@ function showSafetyEquipmentSections() {
     
     let currentSubsection = '';
 
-    function showSubsectionStandart(sectionName, subsectionName) {
-        hideAddStepForm();
 
-        document.querySelectorAll('.infomation').forEach((section) => {
-            section.style.display = 'none';
-        });
-
-        // Logic to display the form
-        var addStepFormContainer = document.getElementById("add-step-form-container_standard");
-        addStepFormContainer.style.display = "block";
-
-        // Set values for both section and subsection
-        var currentSectionField = document.getElementById("current_section");
-        currentSectionField.value = sectionName;
-
-        var currentSubsectionField = document.getElementById("current_subsection");
-        currentSubsectionField.value = subsectionName;
-
-        openedSubsection = subsectionName;
-
-        currentSection = sectionName;
-
-        console.log(currentSectionField.value, currentSubsectionField.value);
-        // Additional logic if needed
-    }
 
     function closeSubsectionStandart () {
         var addStepFormContainer = document.getElementById("add-step-form-container_standard");
         addStepFormContainer.style.display = "none";
     }
 
-    function closeEverethingOpenSection () {
-        var OpenSection = document.getElementById(".information")
-        OpenSection.style.display = "none";
-    }
     
     let openedSubsection = null;
     
@@ -765,7 +713,7 @@ function showSafetyEquipmentSections() {
         formData.append('file', fileInput.files[0]);
 
         try {
-            const response = await fetch(`http://127.0.0.1:5000/upload_image/${$project._id}/${currentSection}/${currentSubsection}`, {
+            const response = await fetch(`http://127.0.0.1:5000/edit_project/upload_image/${$project._id}/${currentSection}/${currentSubsection}`, {
                 method: 'POST',
                 body: formData
             });
@@ -950,6 +898,26 @@ function showSafetyEquipmentSections() {
             console.error('Error:', error);
         }
     }
+
+    let stepRecommendations = '';
+
+    async function getStepRecommendations(section,subsection) {
+        stepRecommendations = 'Наш бот уже отвечает на ваш запрос подождите...';
+        const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/get-gpt-recommendations`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ subsection,section, } )
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            stepRecommendations = data.recommendations; // Обновление переменной с рекомендациями
+        } else {
+            console.error('Ошибка при получении рекомендаций');
+        }
+    }
 </script>
 
 <style>
@@ -984,6 +952,8 @@ button {
     display: flex;
     justify-content: space-around;
 }
+
+
 
 .deck {
     margin-left: 2%;
@@ -1043,6 +1013,11 @@ img {
 .footer{
     height: 570px;
 }
+
+.steps {
+    height: 300px;
+    width: 1000px;
+}
 </style>
 
 
@@ -1068,6 +1043,12 @@ img {
         <button id="steering-system-sections-button" on:click={showSteeringSystemSections}>STEERING SYSTEM</button>
         <button id="tankage-sections-button" on:click={showTankageSections}>TANKAGE</button>
         <button id="safety-equipment-sections-button" on:click={showSafetyEquipmentSections}>SAFETY EQUIPMENT</button>
+        {#if $project && $project.sectionse && $project.sectionse.length > 0}
+            {#each $project.sectionse as section (section)}
+                <!-- Button to toggle subsections -->
+                <button id="{ section.name }-button" on:click={() => showSubsections(section.name)}>{ section.name }</button>
+            {/each}
+        {/if}
         <button id="create-section-button" class="forplus" on:click={showCreateSectionModal}>+</button>
 
         <!--добавление подраздела-->
@@ -1101,7 +1082,6 @@ img {
         {#if $project && $project.sectionse && $project.sectionse.length > 0}
             {#each $project.sectionse as section (section)}
                 <!-- Button to toggle subsections -->
-                <button id="{ section.name }-button" on:click={() => showSubsections(section.name)}>{ section.name }</button>
                 <div id="subsections-{ section.name }" style="display: {subsectionsDivStyle(section.name)};" class="osnova">
                     <h1>{ section.name }</h1>
                     <button class="forplus" on:click={() => showCreateSubsectionModal(section.name)}>+</button>
@@ -1149,190 +1129,139 @@ img {
     </div>
     
     <div class="osnova" style="display: none;" id="introduction-sections">
-        <h1 class="forosnova">Introduction sections</h1>
-        <button id="gen_info-button" on:click={() => showSubsection('introduction','gen_info')}>Genera Vessel Info</button>
-        <button id="certification-button" on:click={() => showSubsection('introduction','certification')}>CERTIFICATION</button>
-        <button id="purpose_of_survey-button" on:click={() => showSubsection('introduction','purpose_of_survey')}>PURPOSE OF SURVEY</button>
-        <button id="circumstances_of_survey-button" on:click={() => showSubsection('introduction','circumstances_of_survey')}>CIRCUMSTANCES OF SURVEY</button>
-        <button id="report_file_no-button" on:click={() => showSubsection('introduction','report_file_no')}>REPORT FILE NO</button>
-        <button id="surveyor_qualifications-button" on:click={() => showSubsection('introduction','surveyor_qualifications')}>SURVEYOR QUALIFICATIONS</button>
-        <button id="intended_use-button" on:click={() => showSubsection('introduction','intended_use')}>INTENDED USE</button>
-        {#if $project && $project.introduction && $project.introduction.length > 0}
-            {#each $project.introduction as subsection}
-                    <button on:click={() => showSubsectionStandart('introduction', subsection.name)}>{subsection.name}</button>
+        {#if $project && $project.sections && $project.sections.introduction}
+            <h1>Introduction</h1>
+            {#each Object.keys($project.sections.introduction) as key}
+                <button id="{key}-button" on:click={() => showSubsection('introduction',key)}>{key.replace(/_/g, ' ')}</button>
             {/each}
+        {:else}
+            <h1>no project</h1>
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('introduction')}>+</button>
     </div>
     <div class="osnova" style="display: none;" id="hull-sections">
-        <h1 class="forosnova">Hull sections</h1>
-        <button id="layout_overview-button" on:click={() => showSubsection("hull",'layout_overview')}>LAYOUT OVERVIEW</button>
-        <button id="design-button" on:click={() => showSubsection("hull",'design')}>DESIGN</button>
-        <button id="deck-button" on:click={() => showSubsection("hull",'deck')}>DECK</button>
-        <button id="structural_members-button" on:click={() => showSubsection("hull",'structural_members')}>STRUCTURAL MEMBERS</button>
-        <button id="bottom_paint-button" on:click={() => showSubsection("hull",'bottom_paint')}>BOTTOM PAINT</button>
-        <button id="blister_comment-button" on:click={() => showSubsection("hull",'blister_comment')}>BLISTER COMMENT</button>
-        <button id="transom-button" on:click={() => showSubsection("hull",'transom')}>TRANSOM</button>
-        {#if $project && $project.hull && $project.hull.length > 0}
-            {#each $project.hull as subsection}
-                <button on:click={() => showSubsectionStandart('hull',subsection.name)}>{subsection.name}</button>
+        {#if $project && $project.sections && $project.sections.hull}
+            <h1>Hull</h1>
+            {#each Object.keys($project.sections.hull) as key}
+                <button id="{key}-button" on:click={() => showSubsection('hull',key)}>{key.replace(/_/g, ' ')}</button>
             {/each}
+        {:else}
+            <h1>no project</h1>
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('hull')}>+</button>
     </div>
     <div class="osnova" style="display: none;" id="above-sections">
-        <h1 class="forosnova">Above sections</h1>
-        <button id="deck_floor_plan-button" on:click={() => showSubsection("above",'deck_floor_plan')}>DECK FLOOR PLAN</button>
-        <button id="anchor_platform-button" on:click={() => showSubsection("above",'anchor_platform')}>ANCHOR PLATFORM</button>
-        <button id="toe_rails-button" on:click={() => showSubsection("above",'toe_rails')}>TOE RAILS</button>
-        <button id="mooring_hardware-button" on:click={() => showSubsection("above",'mooring_hardware')}>MOORING HARDWARE</button>
-        <button id="hatches-button" on:click={() => showSubsection("above",'hatches')}>HATCHES</button>
-        <button id="exterior_seating-button" on:click={() => showSubsection("above",'exterior_seating')}>EXTERIOR SEATING</button>
-        <button id="cockpit_equipment-button" on:click={() => showSubsection("above",'cockpit_equipment')}>COCKPIT EQUIPMENT</button>
-        <button id="ngine_hatch-button" on:click={() => showSubsection("above",'ngine_hatch')}>ENGINE HATCH</button>
-        <button id="above_draw_water_line-button" on:click={() => showSubsection("above",'above_draw_water_line')}>ABOVE DRAW WATER LINE</button>
-        <button id="boarding_ladder-button" on:click={() => showSubsection("above",'boarding_ladder')}>BOARDING LADDER</button>
-        <button id="swim_platform-button" on:click={() => showSubsection("above",'swim_platform')}>SWIM PLATFORM</button>
-        {#if $project && $project.above && $project.above.length > 0}
-            {#each $project.above as subsection}
-                <button on:click={() => showSubsectionStandart('above',subsection.name)}>{subsection.name}</button>
+        {#if $project && $project.sections && $project.sections.above}
+            <h1>Above</h1>
+            {#each Object.keys($project.sections.above) as key}
+                <button id="{key}-button" on:click={() => showSubsection('above',key)}>{key.replace(/_/g, ' ')}</button>
             {/each}
+        {:else}
+            <h1>no project</h1>
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('above')}>+</button>
     </div>
     <div class="osnova" style="display: none;" id="below-sections">
-        <h1 class="forosnova">Below sections</h1>
-        <button id="below_draw_water-button" on:click={() => showSubsection("below",'below_draw_water')}>BELOW DRAW WATER</button>
-        <button id="thru_hull_strainers-button" on:click={() => showSubsection("below",'thru_hull_strainers')}>THRU HULL STRAINERS</button>
-        <button id="transducer-button" on:click={() => showSubsection("below",'transducer')}>TRANSDUCER(S)</button>
-        <button id="sea_valves-button" on:click={() => showSubsection("below",'sea_valves')}>SEA VALVES</button>
-        <button id="sea_strainers-button" on:click={() => showSubsection("below",'sea_strainers')}>SEA STRAINERS</button>
-        <button id="trim_tabs-button" on:click={() => showSubsection("below",'trim_tabs')}>TRIM TABS</button>
-        <button id="note-button" on:click={() => showSubsection("below",'note')}>NOTE</button>
-        {#if $project && $project.below && $project.below.length > 0}
-            {#each $project.below as subsection}
-                <button on:click={() => showSubsectionStandart('below',subsection.name)}>{subsection.name}</button>
+        {#if $project && $project.sections && $project.sections.below}
+            <h1>Below</h1>
+            {#each Object.keys($project.sections.below) as key}
+                <button id="{key}-button" on:click={() => showSubsection('below',key)}>{key.replace(/_/g, ' ')}</button>
             {/each}
+        {:else}
+            <h1>no project</h1>
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('below')}>+</button>
     </div>
     <div class="osnova" style="display: none;" id="cathodic-protection-sections">
-        <h1 class="forosnova">Cathodic protection sections</h1>
-        <button id="bonding_system-button" on:click={() => showSubsection("cathodic-protection",'bonding_system')}>BONDING SYSTEM</button>
-        <button id="anodes-button" on:click={() => showSubsection("cathodic-protection",'anodes')}>ANODES</button>
-        <button id="lightning_protection-button" on:click={() => showSubsection("cathodic-protection",'lightning_protection')}>LIGHTNING PROTECTION</button>
-        <button id="additional_remarks-button" on:click={() => showSubsection("cathodic-protection",'additional_remarks')}>ADDITIONAL REMARKS</button>
-        {#if $project && $project.cathodic && $project.cathodic.length > 0}
-            {#each $project.cathodic as subsection}
-                <button on:click={() => showSubsectionStandart('cathodic',subsection.name)}>{subsection.name}</button>
+        {#if $project && $project.sections && $project.sections.cathodic}
+            <h1>Cathodic</h1>
+            {#each Object.keys($project.sections.cathodic) as key}
+                <button id="{key}-button" on:click={() => showSubsection('cathodic',key)}>{key.replace(/_/g, ' ')}</button>
             {/each}
+        {:else}
+            <h1>no project</h1>
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('cathodic')}>+</button>
     </div>
     <div class="osnova" style="display: none;" id="helm-station-sections">
-        <h1 class="forosnova">Helm station sections</h1>
-        <button id="helm_station-button" on:click={() => showSubsection("helm-station",'helm_station')}>HELM STATION</button>
-        <button id="throttle_shift_controls-button" on:click={() => showSubsection("helm-station",'throttle_shift_controls')}>THROTTLE & SHIFT CONTROLS</button>
-        <button id="engine_room_blowers-button" on:click={() => showSubsection("helm-station",'engine_room_blowers')}>ENGINE ROOM BLOWERS</button>
-        <button id="engine_status-button" on:click={() => showSubsection("helm-station",'engine_status')}>ENGINE STATUS</button>
-        <button id="other_electronics_controls-button" on:click={() => showSubsection("helm-station",'other_electronics_controls')}>OTHER ELECTRONICS & CONTROLS</button>
-        {#if $project && $project.helm && $project.helm.length > 0}
-            {#each $project.helm as subsection}
-                <button on:click={() => showSubsectionStandart('helm',subsection.name)}>{subsection.name}</button>
+        {#if $project && $project.sections && $project.sections.helm}
+            <h1>Helm</h1>
+            {#each Object.keys($project.sections.helm) as key}
+                <button id="{key}-button" on:click={() => showSubsection('helm',key)}>{key.replace(/_/g, ' ')}</button>
             {/each}
+        {:else}
+            <h1>no project</h1>
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('helm')}>+</button>
     </div>
     <div class="osnova" style="display: none;" id="cabin-interior-sections">
-        <h1 class="forosnova">Cabin interior sections</h1>
-        <button id="entertainment_berthing-button" on:click={() => showSubsection("cabin-interior",'entertainment_berthing')}>ENTERTAINMENT BERTHING & SALON</button>
-        <button id="interior_lighting-button" on:click={() => showSubsection("cabin-interior",'interior_lighting')}>INTERIOR LIGHTING</button>
-        <button id="galley_dinette-button" on:click={() => showSubsection("cabin-interior",'galley_dinette')}>GALLEY/DINETTE & ACCESSORIES</button>
-        <button id="water_closets-button" on:click={() => showSubsection("cabin-interior",'water_closets')}>WATER CLOSET(S)</button>
-        <button id="climate_control-button" on:click={() => showSubsection("cabin-interior",'climate_control')}>CLIMATE CONTROL</button>
-        {#if $project && $project.cabin && $project.cabin.length > 0}
-            {#each $project.cabin as subsection}
-                <button on:click={() => showSubsectionStandart('cabin',subsection.name)}>{subsection.name}</button>
+        {#if $project && $project.sections && $project.sections.cabin}
+            <h1>Cabin</h1>
+            {#each Object.keys($project.sections.cabin) as key}
+                <button id="{key}-button" on:click={() => showSubsection('cabin',key)}>{key.replace(/_/g, ' ')}</button>
             {/each}
+        {:else}
+            <h1>no project</h1>
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('cabin')}>+</button>
     </div>
     
     <div class="osnova" style="display: none;" id="electrical-systems-sections">
-        <h1 class="forosnova">Electrical systems sections</h1>
-        <button id="dc_systems_type-button" on:click={() => showSubsection("electrical-systems",'dc_systems_type')}>DIRECT CURRENT SYSTEM(S) TYPE</button>
-        <button id="ac_systems-button" on:click={() => showSubsection("electrical-systems",'ac_systems')}>ALTERNATING CURRENT (A.C.) SYSTEM(S)</button>
-        <button id="generator-button" on:click={() => showSubsection("electrical-systems",'generator')}>GENERATOR</button>
-        {#if $project && $project.electrical && $project.electrical.length > 0}
-            {#each $project.electrical as subsection}
-                <button on:click={() => showSubsectionStandart('electrical',subsection.name)}>{subsection.name}</button>
+        {#if $project && $project.sections && $project.sections.electrical}
+            <h1>Electrical</h1>
+            {#each Object.keys($project.sections.electrical) as key}
+                <button id="{key}-button" on:click={() => showSubsection('electrical',key)}>{key.replace(/_/g, ' ')}</button>
             {/each}
+        {:else}
+            <h1>no project</h1>
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('electrical')}>+</button>
     </div>
     
     <div class="osnova" style="display: none;" id="inboard-propulsion-sections">
-        <h1 class="forosnova">Inboard propulsion sections</h1>
-        <button id="engines-button" on:click={() => showSubsection("inboard-propulsion",'engines')}>ENGINE(S)</button>
-        <button id="serial_numbers-button" on:click={() => showSubsection("inboard-propulsion",'serial_numbers')}>SERIAL NUMBERS</button>
-        <button id="engine_hours-button" on:click={() => showSubsection("inboard-propulsion",'engine_hours')}>ENGINE(S) HOURS</button>
-        <button id="other_note-button" on:click={() => showSubsection("inboard-propulsion",'other_note')}>OTHER NOTE</button>
-        <button id="reverse_gears-button" on:click={() => showSubsection("inboard-propulsion",'reverse_gears')}>REVERSE GEAR(S)</button>
-        <button id="shafting_propellers-button" on:click={() => showSubsection("inboard-propulsion",'shafting_propellers')}>SHAFTING & PROPELLER(S)</button>
-        {#if $project && $project.inboard && $project.inboard.length > 0}
-            {#each $project.inboard as subsection}
-                <button on:click={() => showSubsectionStandart('inboard',subsection.name)}>{subsection.name}</button>
+        {#if $project && $project.sections && $project.sections.inboard}
+            <h1>Inboard</h1>
+            {#each Object.keys($project.sections.inboard) as key}
+                <button id="{key}-button" on:click={() => showSubsection('inboard',key)}>{key.replace(/_/g, ' ')}</button>
             {/each}
+        {:else}
+            <h1>no project</h1>
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('inboard')}>+</button>
     </div>
     
     <div class="osnova" style="display: none;" id="steering-system-sections">
-        <h1 class="forosnova">Steering system sections</h1>
-        <button id='manufacture-button' on:click={() => showSubsection("steering-system",'manufacture')}>MANUFACTURE</button>
-        <button id='steering_components-button' on:click={() => showSubsection("steering-system",'steering_components')}>STEERING SYSTEM COMPONENTS</button>
-        {#if $project && $project.steering && $project.steering.length > 0}
-            {#each $project.steering as subsection}
-                <button on:click={() => showSubsectionStandart('steering',subsection.name)}>{subsection.name}</button>
+        {#if $project && $project.sections && $project.sections.steering}
+            <h1>Steering</h1>
+            {#each Object.keys($project.sections.steering) as key}
+                <button id="{key}-button" on:click={() => showSubsection('steering',key)}>{key.replace(/_/g, ' ')}</button>
             {/each}
+        {:else}
+            <h1>no project</h1>
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('steering')}>+</button>
     </div>
     
     <div class="osnova" style="display: none;" id="tankage-sections">
-        <h1 class="forosnova">Tankage sections</h1>
-        <button id='fuel_tank-button' on:click={() => showSubsection("tankage",'fuel_tank')}>FUEL TANK(S) & PIPING</button>
-        <button id='potable_water_system-button' on:click={() => showSubsection("tankage",'potable_water_system')}>POTABLE WATER SYSTEM & WATER HEATER</button>
-        <button id='holding_tank_black_water-button' on:click={() => showSubsection("tankage",'holding_tank_black_water')}>HOLDING TANK(S)-BLACK WATER</button>
-        {#if $project && $project.tankage && $project.tankage.length > 0}
-            {#each $project.tankage as subsection}
-                <button id='holding_tank_black_water-button' on:click={() => showSubsectionStandart('tankage',subsection.name)}>{subsection.name}</button>
+        {#if $project && $project.sections && $project.sections.tankage}
+            <h1>Tankage</h1>
+            {#each Object.keys($project.sections.tankage) as key}
+                <button id="{key}-button" on:click={() => showSubsection('tankage',key)}>{key.replace(/_/g, ' ')}</button>
             {/each}
+        {:else}
+            <h1>no project</h1>
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('tankage')}>+</button>
     </div>
     
     <div class="osnova" style="display: none;" id="safety-equipment-sections">
-        <h1 class="forosnova">Safety equipment sections</h1>
-        <button id='navigational_lights-button' on:click={() => showSubsection("safety-equipment",'navigational_lights')}>NAVIGATIONAL LIGHTS</button>
-        <button id='life_jackets-button' on:click={() => showSubsection("safety-equipment",'life_jackets')}>LIFE JACKETS (P.F.D,'S)</button>
-        <button id='throwable_pfd-button' on:click={() => showSubsection("safety-equipment",'throwable_pfd')}>THROWABLE TYPE P.F.D</button>
-        <button id='visual_distress_signals-button' on:click={() => showSubsection("safety-equipment",'visual_distress_signals')}>VISUAL DISTRESS SIGNALS</button>
-        <button id='sound_devices-button' on:click={() => showSubsection("safety-equipment",'sound_devices')}>SOUND DEVICES</button>
-        <button id='uscg_placards-button' on:click={() => showSubsection("safety-equipment",'uscg_placards')}>U.S.C.G. PLACARDS</button>
-        <button id='flame_arrestors-button' on:click={() => showSubsection("safety-equipment",'flame_arrestors')}>FLAME ARRESTOR(S)</button>
-        <button id='engine_ventilation-button' on:click={() => showSubsection("safety-equipment",'engine_ventilation')}>ENGINE VENTILATION</button>
-        <button id='ignition_protection-button' on:click={() => showSubsection("safety-equipment",'ignition_protection')}>IGNITION PROTECTION</button>
-        <button id='inland_navigational_rule_book-button' on:click={() => showSubsection("safety-equipment",'inland_navigational_rule_book')}>INLAND NAVIGATIONAL RULE BOOK</button>
-        <button id='waste_management_plan-button' on:click={() => showSubsection("safety-equipment",'waste_management_plan')}>WASTE MANAGEMENT PLAN</button>
-        <button id='fire_fighting_equipment-button' on:click={() => showSubsection("safety-equipment",'fire_fighting_equipment')}>FIRE FIGHTING EQUIPMENT</button>
-        <button id='bilge_pumps-button' on:click={() => showSubsection("safety-equipment",'bilge_pumps')}>BILGE PUMPS</button>
-        <button id='ground_tackle_windlass-button' on:click={() => showSubsection("safety-equipment",'ground_tackle_windlass')}>GROUND TACKLE & WINDLASS</button>
-        <button id='auxiliary_safety_equipment-button' on:click={() => showSubsection("safety-equipment",'auxiliary_safety_equipment')}>AUXILIARY SAFETY EQUIPMENT</button>
-        {#if $project && $project.safety && $project.safety.length > 0}
-            {#each $project.safety as subsection}
-                <button on:click={() => showSubsectionStandart('safety',subsection.name)}>{subsection.name}</button>
+        {#if $project && $project.sections && $project.sections.safety}
+            <h1>Safety</h1>
+            {#each Object.keys($project.sections.safety) as key}
+                <button id="{key}-button" on:click={() => showSubsection('safety',key)}>{key.replace(/_/g, ' ')}</button>
             {/each}
+        {:else}
+            <h1>no project</h1>
         {/if}
         <button class="forplus" on:click={() => showCreateSubsectionModalStandard('safety')}>+</button>
     </div>
@@ -1354,16 +1283,21 @@ img {
     <!--Добавление шага-->
     <div id="add-step-form-container" style="display: none;">
         <h2>Add Step:</h2>
-        <h1>{currentSubsection}</h1>
+        <h1>{currentSubsection.replace(/_/g, ' ')}</h1>
+        <div id="step-recommendations">
+            <p>{stepRecommendations}</p>
+        </div>
         {#if $project && $project.sections && $project.sections[currentSection] && $project.sections[currentSection][currentSubsection] && $project.sections[currentSection][currentSubsection].images.length > 0}
             {#each $project.sections[currentSection][currentSubsection].images as image}
                 <img src={image}/>
                 <button on:click={() => removeImage(image)}>Remove</button>
             {/each}
         {/if}
-        {#if $project && $project.sections && $project.sections[currentSection] && $project.sections[currentSection][currentSubsection] && $project.sections[currentSection][currentSubsection].steps.length > 0}
+        {#if $project && $project.sections && $project.sections[currentSection] && $project.sections[currentSection][currentSubsection] && $project.sections[currentSection][currentSubsection].steps.length}
             {#each $project.sections[currentSection][currentSubsection].steps as step}
+            <div class="steps">    
                 <li>{step}</li>
+            </div>
                 <button on:click={() => removeStep(step)}>Remove</button>
             {/each}
         {/if}
@@ -1382,11 +1316,13 @@ img {
             <input type="hidden" name="section" id="current_section" value="">
             <button type="submit">Add Image</button>
         </form>
+        <h2>Вы можете попросить момощи в осмотре яхты у нашего бота-помощника</h2>
+        <button on:click={() => getStepRecommendations(currentSection,currentSubsection)}>Спросить помощника</button>
     </div>
     
     <!--Добавление шага стандартные разделы-->
     <div id="add-step-form-container_standard" style="display: none;">
-        <h2>Add Step standard:</h2>
+        <h2>{openedSubsection}</h2>
         {#if $project && $project[currentSection] && $project[currentSection].length > 0}
             {#each $project[currentSection] as subsection}
                 <div>
