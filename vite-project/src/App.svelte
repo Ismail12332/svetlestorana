@@ -3,13 +3,14 @@
   import { navigate } from 'svelte-navigator'
   import { onMount } from 'svelte';
   import Glav from './Glav.svelte'
+  import NotFoundPage from './NotFoundPage.svelte'
   import EditProject from "./EditProject.svelte"
   import Auth0 from 'auth0-js';
 
   const webAuth = new Auth0.WebAuth({
       domain: 'dev-whbba5qnfveb88fc.us.auth0.com',
       clientID: 'lmZzOfWN5OU25eodYKHpgPaiN67UQ5m3',
-      redirectUri: 'http://localhost:5173/glav',
+      redirectUri: 'https://survzilla-frontend-finish.onrender.com/',
       responseType: 'token id_token',
       scope: 'openid profile email',
   });
@@ -50,6 +51,10 @@
 
   <Route path='/EditProject/:project_id'>
     <EditProject/>
+  </Route>
+
+  <Route path="/*">
+    <NotFoundPage />
   </Route>
 </Router>
 

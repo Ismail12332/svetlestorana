@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session,jsonify,abort
+from flask import Flask, render_template, request, redirect, url_for, session,jsonify,abort,send_file
 from pymongo import MongoClient
 from passlib.hash import bcrypt
 from bson import ObjectId
@@ -12,6 +12,13 @@ import uuid
 import pprint
 from openai import OpenAI
 import traceback
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
+from reportlab.lib.styles import getSampleStyleSheet,ParagraphStyle
+from reportlab.lib.units import inch
+from io import BytesIO
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 load_dotenv()
 
@@ -32,7 +39,7 @@ def create_app():
     users_collection = app.db.users
     projects_collection = app.db.projects
     client = OpenAI(
-        api_key="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",
+        api_key="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",
     )
 
     # Создание клиента Backblaze B2
@@ -46,7 +53,8 @@ def create_app():
     bucket_name = 'Survzila'
     bucket = b2_api.get_bucket_by_name(bucket_name)
 
-
+    # Регистрация шрифта
+    pdfmetrics.registerFont(TTFont('DejaVuSans', 'DejaVuSans.ttf'))
 
     @app.route("/", methods=["GET", "POST"])
     def login(supports_credentials=True):
@@ -97,6 +105,63 @@ def create_app():
 
         return "Регистрация прошла успешно.", 200
 
+
+    def create_project_pdf(project):
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        story = []
+        styles = getSampleStyleSheet()
+        styles.add(ParagraphStyle(name='CustomNormal', fontName='DejaVuSans'))
+
+        # Добавление основной информации проекта
+        story.append(Paragraph(f"First Name: {project['first_name']}", styles['Heading1']))
+        story.append(Paragraph(f"Last Name: {project['last_name']}", styles['Heading1']))
+        story.append(Paragraph(f"City: {project['city']}", styles['Heading1']))
+        story.append(Spacer(1, 0.2 * inch))
+
+        # Перебор разделов и подразделов
+        for section_name, section_content in project['sections'].items():
+            story.append(Paragraph(section_name, styles['Heading1']))
+            for subsection_name, subsection_content in section_content.items():
+                story.append(Paragraph(subsection_name, styles['Heading2']))
+
+                # Добавление шагов
+                for step in subsection_content['steps']:
+                    story.append(Paragraph(step, styles['CustomNormal']))
+                    story.append(Spacer(1, 0.1 * inch))
+
+                # Добавление изображений
+                for image_url in subsection_content['images']:
+                    img = Image(image_url)
+                    img.drawHeight = 2 * inch
+                    img.drawWidth = 2 * inch
+                    story.append(img)
+                    story.append(Spacer(1, 0.2 * inch))
+
+            story.append(Spacer(1, 0.2 * inch))
+
+        doc.build(story)
+        buffer.seek(0)
+        return buffer
+
+
+    @app.route('/download_project_pdf/<project_id>')
+    def download_project_pdf(project_id):
+        # Получение проекта по его ID (примерная реализация)
+        project = projects_collection.find_one({"_id": ObjectId(project_id)})
+
+        if not project:
+            abort(404, description="Project not found")
+
+        pdf_buffer = create_project_pdf(project)
+
+        # Отправка PDF клиенту
+        return send_file(
+            pdf_buffer,
+            as_attachment=True,
+            download_name=f"project_{project_id}.pdf",
+            mimetype='application/pdf'
+        )
 
     def convert_projects_to_list(projects):
         #Converts MongoDB projects to a list with ObjectId converted to string.

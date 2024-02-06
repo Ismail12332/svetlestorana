@@ -23,7 +23,7 @@
 
     async function fetchProjectDetails(project_id) {
         try {
-        const response = await fetch(`http://127.0.0.1:5000/EditProject/${project_id}`, {
+        const response = await fetch(`https://survzilla-frontend-finish.onrender.com/EditProject/${project_id}`, {
             method: "GET",
             headers: {
             "Content-Type": "application/json",
@@ -63,7 +63,7 @@
         const currentSubsection = document.getElementById("current_subsection").value;
 
         try {
-            const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/add_step`, {
+            const response = await fetch(`https://survzilla-frontend-finish.onrender.com/edit_project/${$project._id}/add_step`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -78,6 +78,7 @@
             const data = await response.json();
             console.log(data); // Можете обработать ответ от сервера здесь
             project.set(data.updated_project);
+            
         } catch (error) {
             console.error('Error:', error);
         }
@@ -87,7 +88,7 @@
         event.preventDefault();
 
         try {
-            const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/add_subsection_step`, {
+            const response = await fetch(`https://survzilla-frontend-finish.onrender.com/edit_project/${$project._id}/add_subsection_step`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
@@ -121,7 +122,7 @@
         const sectionName = document.getElementById("section_name").value;
 
         try {
-            const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/add_section`, {
+            const response = await fetch(`https://survzilla-frontend-finish.onrender.com/edit_project/${$project._id}/add_section`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
@@ -151,7 +152,7 @@
 
     async function addSubsection(sectionName) {
         try {
-            const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/add_subsection`, {
+            const response = await fetch(`https://survzilla-frontend-finish.onrender.com/edit_project/${$project._id}/add_subsection`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
@@ -203,7 +204,7 @@
         const currentSubsection = document.getElementById("current_subsection").value;
         console.log(`section_name=${encodeURIComponent(currentSection)}&subsection_name=${encodeURIComponent(currentSubsection)}&step_description=${encodeURIComponent(stepDescription)}`);
         try {
-            const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/add_step_standard`, {
+            const response = await fetch(`https://survzilla-frontend-finish.onrender.com/edit_project/${$project._id}/add_step_standard`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
@@ -234,7 +235,7 @@
 
     async function addSubsectionStandard(sectionName) {
         try {
-            const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/add_subsection_standard`, {
+            const response = await fetch(`https://survzilla-frontend-finish.onrender.com/edit_project/${$project._id}/add_subsection_standard`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
@@ -713,7 +714,7 @@ function showSafetyEquipmentSections() {
         formData.append('file', fileInput.files[0]);
 
         try {
-            const response = await fetch(`http://127.0.0.1:5000/edit_project/upload_image/${$project._id}/${currentSection}/${currentSubsection}`, {
+            const response = await fetch(`https://survzilla-frontend-finish.onrender.com/edit_project/upload_image/${$project._id}/${currentSection}/${currentSubsection}`, {
                 method: 'POST',
                 body: formData
             });
@@ -739,7 +740,7 @@ function showSafetyEquipmentSections() {
             const formData = new FormData();
             formData.append('file', fileInput.files[0]); // Первый файл из выбранных изображений
 
-            const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/${sectionName}/${subsectionName}/add_image`, {
+            const response = await fetch(`https://survzilla-frontend-finish.onrender.com/edit_project/${$project._id}/${sectionName}/${subsectionName}/add_image`, {
                 method: "POST",
                 body: formData,
             });
@@ -763,7 +764,7 @@ function showSafetyEquipmentSections() {
 
     async function deleteImage(imageUrl, sectionName, subsectionName) {
         try {
-            const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/${sectionName}/${subsectionName}/delete_image`, {
+            const response = await fetch(`https://survzilla-frontend-finish.onrender.com/edit_project/${$project._id}/${sectionName}/${subsectionName}/delete_image`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -789,7 +790,7 @@ function showSafetyEquipmentSections() {
     
     async function deleteImages(imageUrl, sectionName, subsectionName) {
     try {
-        const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/${sectionName}/${subsectionName}/delete_images`, {
+        const response = await fetch(`https://survzilla-frontend-finish.onrender.com/edit_project/${$project._id}/${sectionName}/${subsectionName}/delete_images`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -827,7 +828,7 @@ function showSafetyEquipmentSections() {
         formData.append('image_upload', imageFile); // Добавляем файл в FormData
 
         try {
-            const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/add_imagestandard`, {
+            const response = await fetch(`https://survzilla-frontend-finish.onrender.com/edit_project/${$project._id}/add_imagestandard`, {
                 method: "POST",
                 body: formData,
             });
@@ -850,7 +851,7 @@ function showSafetyEquipmentSections() {
 
     async function removeStep(step) {
         // Выполните запрос на сервер для удаления шага
-        fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/remove_step`, {
+        fetch(`https://survzilla-frontend-finish.onrender.com/edit_project/${$project._id}/remove_step`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -876,7 +877,7 @@ function showSafetyEquipmentSections() {
 
     async function removeImage(image) {
         try {
-            const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/remove_image`, {
+            const response = await fetch(`https://survzilla-frontend-finish.onrender.com/edit_project/${$project._id}/remove_image`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -903,7 +904,7 @@ function showSafetyEquipmentSections() {
 
     async function getStepRecommendations(section,subsection) {
         stepRecommendations = 'Наш бот уже отвечает на ваш запрос подождите...';
-        const response = await fetch(`http://127.0.0.1:5000/edit_project/${$project._id}/get-gpt-recommendations`, {
+        const response = await fetch(`https://survzilla-frontend-finish.onrender.com/edit_project/${$project._id}/get-gpt-recommendations`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -917,6 +918,27 @@ function showSafetyEquipmentSections() {
         } else {
             console.error('Ошибка при получении рекомендаций');
         }
+    }
+
+    let activeImage = null;
+
+    async function downloadPdf() {
+        const response = await fetch(`https://survzilla-frontend-finish.onrender.com/download_project_pdf/${$project._id}`);
+        
+        if (!response.ok) {
+            alert('Произошла ошибка при загрузке PDF');
+            return;
+        }
+
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = "project_report.pdf"; // Название файла
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
     }
 </script>
 
@@ -1014,9 +1036,28 @@ img {
     height: 570px;
 }
 
-.steps {
-    height: 300px;
-    width: 1000px;
+
+
+.thumbnail {
+        width: 100px; /* Или другой подходящий размер */
+        cursor: pointer;
+}
+
+.modalimage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.active-image {
+    max-width: 90%;
+    max-height: 90%;
 }
 </style>
 
@@ -1050,6 +1091,7 @@ img {
             {/each}
         {/if}
         <button id="create-section-button" class="forplus" on:click={showCreateSectionModal}>+</button>
+        <button on:click={downloadPdf}>Получить PDF</button>
 
         <!--добавление подраздела-->
         <div id="createSubsectionModal" class="modal">
@@ -1287,9 +1329,14 @@ img {
         <div id="step-recommendations">
             <p>{stepRecommendations}</p>
         </div>
+        {#if activeImage}
+            <div class="modalimage" on:click={() => activeImage = null}>
+                <img src={activeImage} alt="Active Image" class="active-image"/>
+            </div>
+        {/if}
         {#if $project && $project.sections && $project.sections[currentSection] && $project.sections[currentSection][currentSubsection] && $project.sections[currentSection][currentSubsection].images.length > 0}
             {#each $project.sections[currentSection][currentSubsection].images as image}
-                <img src={image}/>
+                <img src={image} alt="Thumbnail" class="thumbnail" on:click={() => activeImage = image}/>
                 <button on:click={() => removeImage(image)}>Remove</button>
             {/each}
         {/if}
@@ -1316,7 +1363,7 @@ img {
             <input type="hidden" name="section" id="current_section" value="">
             <button type="submit">Add Image</button>
         </form>
-        <h2>Вы можете попросить момощи в осмотре яхты у нашего бота-помощника</h2>
+        <p>Вы можете попросить момощи в осмотре яхты у нашего бота-помощника</p>
         <button on:click={() => getStepRecommendations(currentSection,currentSubsection)}>Спросить помощника</button>
     </div>
     

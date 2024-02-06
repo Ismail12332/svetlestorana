@@ -26,7 +26,7 @@
 
         const user_id = localStorage.getItem('user_id'); // Get user_id from localStorage
 
-        const response = await fetch('http://127.0.0.1:5000/index2', {
+        const response = await fetch('https://survzilla-frontend-finish.onrender.com/index2', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -78,7 +78,7 @@
         const user_id = localStorage.getItem('user_id');
 
         // Send a GET request to fetch projects
-        const response = await fetch(`http://127.0.0.1:5000/glav?user_id=${user_id}`, {
+        const response = await fetch(`https://survzilla-frontend-finish.onrender.com/glav?user_id=${user_id}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
