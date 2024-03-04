@@ -39,7 +39,7 @@ def create_app():
     users_collection = app.db.users
     projects_collection = app.db.projects
     client = OpenAI(
-        api_key="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",
+        api_key="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",
     )
 
     # Создание клиента Backblaze B2
@@ -174,13 +174,18 @@ def create_app():
         return projects_list
     
 
-    @app.route("/glav", methods=["GET"])
+    @app.route("/api/glav", methods=["GET"])
     def get_projects(supports_credentials=True):
         user_id = request.args.get("user_id")
         print(user_id)
         projects = app.db.projects.find({"user_id": user_id})
         projects_list = convert_projects_to_list(projects)
         return jsonify({"status": "success", "user_id": str(user_id), "projects": projects_list})
+    
+
+    @app.route("/glav", methods=["GET"])
+    def get_projectse(supports_credentials=True):
+            return render_template("index.html")
     
 
     @app.route("/index2", methods=["POST"])
@@ -250,7 +255,7 @@ def create_app():
 
 
     #Переключение на проект в главное странице нажатие на имя проекта
-    @app.route("/EditProject/<string:project_id>", methods=["GET"])
+    @app.route("/api/EditProject/<string:project_id>", methods=["POST"])
     def edit_project(project_id,supports_credentials=True):
         try:
             # Преобразовываем project_id в ObjectId
@@ -269,6 +274,10 @@ def create_app():
         print(f"Fetching project with ID: {project_id}", project)
 
         return jsonify({"status": "success", "project": project})
+    
+    @app.route("/EditProject/<project_id>", methods=["GET"])
+    def get_projectse_edit_project(project_id,supports_credentials=True):
+        return render_template("index.html")
 
     #Добавление изображения для подразделов стандартных разделов
     @app.route('/edit_project/upload_image/<project_id>/<section_name>/<subsection_name>', methods=['POST'])
@@ -401,62 +410,6 @@ def create_app():
             return jsonify({"status": "error", "message": "Failed to upload file"}), 400
         
 
-    @app.route('/edit_project/<project_id>/<section_name>/<subsection_name>/delete_image', methods=['POST'])
-    def delete_image(project_id, section_name, subsection_name):
-        try:
-            project_id = ObjectId(project_id)
-        except Exception as e:
-            return jsonify({"status": "error", "message": "Invalid project_id"}), 400
-
-        image_url = request.json.get('image_url')  # Получение URL изображения из запроса
-
-        # Удаление изображения из подраздела в базе данных
-        result = app.db.projects.update_one(
-            {"_id": project_id, f"sectionse.name": section_name, f"sectionse.subsections.name": subsection_name},
-            {"$pull": {f"sectionse.$.subsections.$[elem].images": {"image_url": image_url}}},
-            array_filters=[{"elem.name": subsection_name}]
-        )
-        updated_project = app.db.projects.find_one({"_id": project_id})
-        updated_project["_id"] = str(updated_project["_id"])
-
-        if result.modified_count > 0:
-            return jsonify({"status": "success", "message": "Image deleted successfully","updated_project": updated_project}), 200
-        else:
-            return jsonify({"status": "error", "message": "Failed to delete image"}), 400
-
-
-    #Дабовление и удаление записей в стандартные разделы разделах
-    @app.route("/edit_project/<project_id>/add_step_standard", methods=["POST"])
-    def add_step_standard(project_id):
-        try:
-            project_id = ObjectId(project_id)
-        except Exception as e:
-            return jsonify({"status": "error", "message": "Invalid project_id"}), 400
-        
-        section_name = request.form.get("section_name")
-        subsection_name = request.form.get("subsection_name")
-        step_description = request.form.get("step_description")
-
-        # Добавьте ваш код для обработки данных и добавления шага в соответствующий подраздел
-        print(section_name,subsection_name, step_description)
-
-        updated_project = app.db.projects.find_one_and_update(
-            {"_id": project_id, f"{section_name}.name": subsection_name},
-            {"$push": {f"{section_name}.$.subsections": {"step_description": step_description}}}
-        )
-
-        updated_project = app.db.projects.find_one({"_id": project_id})
-        updated_project["_id"] = str(updated_project["_id"])
-        print('твой проект',updated_project)
-        return jsonify({
-            "status": "success",
-            "message": "Step added successfully",
-            "step_description": step_description,
-            "section_name": section_name,
-            "subsection_name": subsection_name,
-            "updated_project": updated_project
-        })
-        
 
     #Дабовление и удаление записей в разделах (нужно переделать)--------------------------------------------------
     @app.route("/edit_project/<project_id>/add_step", methods=["POST"])
@@ -494,34 +447,6 @@ def create_app():
             print("Error:", e)
             return jsonify({"status": "error", "message": "An error occurred"}), 500
 
-
-    @app.route("/edit_project/<project_id>/add_subsection_step", methods=["POST"])
-    def add_subsection_step(project_id):
-        try:
-            project_id = ObjectId(project_id)
-        except Exception as e:
-            return "Invalid project_id", 400
-
-        section_name = request.form.get("section_name")
-        subsection_name = request.form.get("subsection_name")
-        step_description = request.form.get("step_description")
-
-        try:
-            result = app.db.projects.update_one(
-                {"_id": project_id, "sectionse.name": section_name},
-                {"$push": {"sectionse.$.subsections.$[s].cells": {"description": step_description}}},
-                array_filters=[{"s.name": subsection_name}]
-            )
-            if result.modified_count == 0:
-                return "Section or subsection not found in the project", 404
-        except Exception as e:
-            print("Error:", e)
-            return "An error occurred", 500
-
-        updated_project = app.db.projects.find_one({"_id": project_id})
-        updated_project['_id'] = str(updated_project['_id'])
-
-        return jsonify({"status": "success", "message": "Step added successfully", "updated_project": updated_project})
     
 
     #Добавление изображения в основные подразделы (нужно переделать)-----------------------------------------
@@ -648,39 +573,6 @@ def create_app():
             print("Error:", e)
             return jsonify({"status": "error", "message": "An error occurred"}), 500
 
-    @app.route("/edit_project/<project_id>/delete_step", methods=["POST"])
-    def delete_step(project_id):
-        try:
-            project_id = ObjectId(project_id)
-        except Exception as e:
-            return jsonify({"status": "error", "message": "Invalid project_id"}), 400
-
-        step_to_delete = request.form.get("step_to_delete")
-        section = request.form.get("section")
-        project = app.db.projects.find_one({"_id": project_id})
-
-        if not project:
-            return jsonify({"status": "error", "message": "Project not found"}), 404
-
-        try:
-            result = app.db.projects.update_one(
-                {"_id": project_id},
-                {"$pull": {f"{section}_steps": step_to_delete}}
-            )
-            if result.modified_count == 0:
-                return jsonify({"status": "error", "message": "Step not found"}), 404
-        except Exception as e:
-            print("Error:", e)
-            return jsonify({"status": "error", "message": "An error occurred"}), 500
-
-        # Получите обновленный проект после добавления шага
-        updated_project = app.db.projects.find_one({"_id": project_id})
-
-        # Преобразуйте ObjectId в строку перед возвратом ответа JSON
-        updated_project["_id"] = str(updated_project["_id"])
-
-        return jsonify({"status": "success", "message": "Step deleted successfully", "updated_project": updated_project})
-
 
     #----------------------------------------------------------------
     #Добавление раздела
@@ -696,7 +588,7 @@ def create_app():
         try:
             result = app.db.projects.update_one(
                 {"_id": project_id},
-                {"$push": {"sectionse": {"name": section_name, "subsections": []}}}
+                {"$set": {f"sections.{section_name}": {}}}
             )
             if result.modified_count == 0:
                 return "Project not found", 404
@@ -709,84 +601,39 @@ def create_app():
         return jsonify({"status": "success", "message": "Section added successfully", "updated_project": updated_project})
 
 
-    #--удаление раздела
-    @app.route("/edit_project/<project_id>/delete_section/<section_name>", methods=["POST"])
-    def delete_section(project_id, section_name):
-        try:
-            project_id = ObjectId(project_id)
-        except Exception as e:
-            return "Invalid project_id", 400
-
-        try:
-            result = app.db.projects.update_one(
-                {"_id": project_id},
-                {"$pull": {"sections": {"name": section_name}}}
-            )
-            if result.modified_count == 0:
-                return "Section not found in the project", 404
-        except Exception as e:
-            print("Error:", e)
-            return "An error occurred", 500
-
-        return redirect(url_for("edit_project", project_id=project_id))
-
-
     #Добавление подраздела
     @app.route("/edit_project/<project_id>/add_subsection", methods=["POST"])
     def add_subsection(project_id):
         try:
             project_id = ObjectId(project_id)
         except Exception as e:
-            return "Invalid project_id", 400
+            return jsonify({"status": "error", "message": "Invalid project_id"}), 400
 
-        section_name = request.form.get("section_name")
-        subsection_name = request.form.get("subsection_name")
+        data = request.json
+        section_name = data.get("section_name")
+        subsection_name = data.get("subsection_name")
+        print(section_name,subsection_name)
+
+        if not section_name or not subsection_name:
+            return jsonify({"status": "error", "message": "Section name and Subsection name are required"}), 400
 
         try:
+            # Добавляем новый подраздел в выбранный раздел
             result = app.db.projects.update_one(
-                {"_id": project_id, "sectionse.name": section_name},
-                {"$push": {"sectionse.$.subsections": {"name": subsection_name, "cells": []}}}
+                {"_id": project_id},
+                {"$set": {f"sections.{section_name}.{subsection_name}": {"images": [], "steps": []}}}
             )
             if result.modified_count == 0:
-                return "Section not found in the project", 404
+                return jsonify({"status": "error", "message": "Project or section not found"}), 404
         except Exception as e:
             print("Error:", e)
-            return "An error occurred", 500
+            return jsonify({"status": "error", "message": "An error occurred during subsection addition"}), 500
 
         updated_project = app.db.projects.find_one({"_id": project_id})
         updated_project['_id'] = str(updated_project['_id'])
         
-        return jsonify({"status": "success", "message": "Section added successfully", "updated_project": updated_project})
+        return jsonify({"status": "success", "message": "Subsection added successfully", "updated_project": updated_project})
     
-    #Добавление подраздела стандартного
-    @app.route("/edit_project/<project_id>/add_subsection_standard", methods=["POST"])
-    def add_subsection_standard(project_id):
-        try:
-            project_id = ObjectId(project_id)
-        except Exception as e:
-            return "Invalid project_id", 400
-        
-        section_name = request.form.get("section_name")
-        subsection_name = request.form.get("subsection_name")
-
-        try:
-            # Добавляем новый подраздел в указанный раздел
-            result = app.db.projects.update_one(
-                {"_id": project_id, f"sections.{section_name}": {"$exists": True}},
-                {"$set": { f"sections.{section_name}.{subsection_name}": {"images": [], "steps": []}}}
-            )
-            
-            if result.modified_count == 0:
-                return "Section not found in the project", 404
-        except Exception as e:
-            print("Error:", e)
-            return "An error occurred", 500
-        
-        updated_project = app.db.projects.find_one({"_id": project_id})
-        updated_project['_id'] = str(updated_project['_id'])
-
-        return jsonify({"status": "success", "message": "Subsection added successfully", "project": updated_project})
-
 
     #чат джипити
     @app.route('/edit_project/<project_id>/get-gpt-recommendations', methods=['POST'])
@@ -794,13 +641,14 @@ def create_app():
         data = request.json
         section = data['section']
         subsection = data['subsection']
-        prompt = f"Пожалуйста, дайте рекомендации для осмотра яхты для раздела {section}, подраздела {subsection}. Что стоит осмотреть и проверить при осмотре {subsection}?"
+        description = data['step_description']
+        prompt = f"был проведен осмотр части корабля {section}, а именно осматривалась {subsection}. если в крации то {description}"
 
         try:
             response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "Ты помощник клиента в осмотре яхты указываешь на то что стоит проверить и как лучше проверять"},
+                {"role": "system", "content": "Ты помощник работника который осмотривает яхты он тебе пишет краткое описание осмотра определенной части коробля тебе нужно расписать как проводился осмотр"},
                 {"role": "user", "content": prompt}
             ]
             )
@@ -812,278 +660,6 @@ def create_app():
             traceback.print_exc()
             return jsonify({'error': str(e)}), 500
             
-    
-    #--удаление подраздела
-    @app.route("/edit_project/<project_id>/delete_subsection/<section_name>/<subsection_name>", methods=["POST"])
-    def delete_subsection(project_id, section_name, subsection_name):
-        try:
-            project_id = ObjectId(project_id)
-        except Exception as e:
-            return "Invalid project_id", 400
-
-        try:
-            result = app.db.projects.update_one(
-                {"_id": project_id, "sections.name": section_name},
-                {"$pull": {"sections.$.subsections": {"name": subsection_name}}}
-            )
-            if result.modified_count == 0:
-                return "Subsection not found in the project", 404
-        except Exception as e:
-            print("Error:", e)
-            return "An error occurred", 500
-
-        return redirect(url_for("edit_project", project_id=project_id))
-
-
-    #Добавление ячейки
-    @app.route("/edit_project/<project_id>/add_cell", methods=["POST"])
-    def add_cell(project_id):
-        try:
-            project_id = ObjectId(project_id)
-        except Exception as e:
-            return "Invalid project_id", 400
-
-        section_name = request.form.get("section_name")
-        subsection_name = request.form.get("subsection_name")
-        cell_name = request.form.get("cell_name")
-        cell_description = request.form.get("cell_description")
-
-        try:
-            result = app.db.projects.update_one(
-                {"_id": project_id},
-                {
-                    "$push": {
-                        "sections.$[section].subsections.$[subsection].cells": {
-                            "name": cell_name,
-                            "description": cell_description
-                        }
-                    }
-                },
-                array_filters=[
-                    {"section.name": section_name},
-                    {"subsection.name": subsection_name}
-                ]
-            )
-            if result.modified_count == 0:
-                return "Section or subsection not found in the project", 404
-        except Exception as e:
-            print("Error:", e)
-            return "An error occurred", 500
-
-        return redirect(url_for("edit_project", project_id=project_id))
-
-
-
-    #--удаление ячейки
-    @app.route("/edit_project/<project_id>/delete_cell/<section_name>/<subsection_name>/<cell_name>", methods=["POST"])
-    def delete_cell(project_id, section_name, subsection_name, cell_name):
-        try:
-            project_id = ObjectId(project_id)
-        except Exception as e:
-            return "Invalid project_id", 400
-
-        try:
-            # Находим проект по идентификатору
-            project = app.db.projects.find_one({"_id": project_id})
-
-            # Находим раздел, подраздел и ячейку, которую нужно удалить
-            section_index = None
-            subsection_index = None
-            cell_index = None
-
-            for i, section in enumerate(project["sections"]):
-                if section["name"] == section_name:
-                    section_index = i
-                    for j, subsection in enumerate(section["subsections"]):
-                        if subsection["name"] == subsection_name:
-                            subsection_index = j
-                            for k, cell in enumerate(subsection["cells"]):
-                                if cell["name"] == cell_name:
-                                    cell_index = k
-
-            # Если раздел, подраздел и ячейка найдены, удаляем ячейку
-            if section_index is not None and subsection_index is not None and cell_index is not None:
-                del project["sections"][section_index]["subsections"][subsection_index]["cells"][cell_index]
-
-                # Обновляем документ проекта в базе данных
-                app.db.projects.update_one({"_id": project_id}, {"$set": project})
-
-            else:
-                return "Cell not found in the project", 404
-
-        except Exception as e:
-            print("Error:", e)
-            return "An error occurred", 500
-
-        return redirect(url_for("edit_project", project_id=project_id))
-
-
-
-    # -- удаление комментария
-    @app.route("/edit_project/<project_id>/delete_comment/<section_name>/<subsection_name>/<cell_name>", methods=["POST"])
-    def delete_comment(project_id, section_name, subsection_name, cell_name):
-        try:
-            project_id = ObjectId(project_id)
-        except Exception as e:
-            return "Invalid project_id", 400
-
-        try:
-            result = app.db.projects.update_one(
-                {
-                    "_id": project_id,
-                    "sections.name": section_name,
-                    "sections.subsections.name": subsection_name,
-                    "sections.subsections.cells.name": cell_name
-                },
-                {
-                    "$unset": {
-                        "sections.$[section].subsections.$[subsection].cells.$[cell].comment": ""
-                    }
-                },
-                array_filters=[
-                    {"section.name": section_name},
-                    {"subsection.name": subsection_name},
-                    {"cell.name": cell_name}
-                ]
-            )
-            if result.modified_count == 0:
-                return "Section, subsection, or cell not found in the project", 404
-        except Exception as e:
-            print("Error:", e)
-            return "An error occurred", 500
-
-        return redirect(url_for("edit_project", project_id=project_id))
-        
-
-
-    #Добавление коментария
-    @app.route("/edit_project/<project_id>/add_comment/<section_name>/<subsection_name>/<cell_name>", methods=["POST"])
-    def add_comment(project_id, section_name, subsection_name, cell_name):
-        try:
-            project_id = ObjectId(project_id)
-        except Exception as e:
-            return "Invalid project_id", 400
-
-        cell_comment = request.form.get("cell_comment")
-
-        try:
-            result = app.db.projects.update_one(
-                {
-                    "_id": project_id,
-                    "sections.name": section_name,
-                    "sections.subsections.name": subsection_name,
-                    "sections.subsections.cells.name": cell_name
-                },
-                {
-                    "$set": {
-                        "sections.$[section].subsections.$[subsection].cells.$[cell].comment": cell_comment
-                    }
-                },
-                array_filters=[
-                    {"section.name": section_name},
-                    {"subsection.name": subsection_name},
-                    {"cell.name": cell_name}
-                ]
-            )
-            if result.modified_count == 0:
-                return "Section, subsection, or cell not found in the project", 404
-        except Exception as e:
-            print("Error:", e)
-            return "An error occurred", 500
-
-        return redirect(url_for("edit_project", project_id=project_id))
-
-
-
-    # #--удаление рейтинга
-    @app.route("/edit_project/<project_id>/delete_rating/<section_name>/<subsection_name>/<cell_name>", methods=["POST"])
-    def delete_rating(project_id, section_name, subsection_name, cell_name):
-        try:
-            project_id = ObjectId(project_id)
-        except Exception as e:
-            return "Invalid project_id", 400
-
-        try:
-            # Находим проект по идентификатору
-            project = app.db.projects.find_one({"_id": project_id})
-
-            # Находим раздел, подраздел, ячейку и рейтинг, который нужно удалить
-            section_index = None
-            subsection_index = None
-            cell_index = None
-            rating_index = None
-
-            for i, section in enumerate(project["sections"]):
-                if section["name"] == section_name:
-                    section_index = i
-                    for j, subsection in enumerate(section["subsections"]):
-                        if subsection["name"] == subsection_name:
-                            subsection_index = j
-                            for k, cell in enumerate(subsection["cells"]):
-                                if cell["name"] == cell_name:
-                                    cell_index = k
-                                    if "rating" in cell:
-                                        rating_index = "rating"
-
-            # Если раздел, подраздел, ячейка и рейтинг найдены, удаляем рейтинг
-            if (
-                section_index is not None
-                and subsection_index is not None
-                and cell_index is not None
-                and rating_index is not None
-            ):
-                del project["sections"][section_index]["subsections"][subsection_index]["cells"][cell_index][rating_index]
-
-                # Обновляем документ проекта в базе данных
-                app.db.projects.update_one({"_id": project_id}, {"$set": project})
-
-            else:
-                return "Rating not found in the project", 404
-
-        except Exception as e:
-            print("Error:", e)
-            return "An error occurred", 500
-
-        return redirect(url_for("edit_project", project_id=project_id))
-        
-
-
-    #Добавление рейтинга
-    @app.route("/edit_project/<project_id>/add_rating/<section_name>/<subsection_name>/<cell_name>", methods=["POST"])
-    def add_rating(project_id, section_name, subsection_name, cell_name):
-        try:
-            project_id = ObjectId(project_id)
-        except Exception as e:
-            return "Invalid project_id", 400
-
-        cell_rating = request.form.get("cell_rating")
-
-        try:
-            result = app.db.projects.update_one(
-                {
-                    "_id": project_id,
-                    "sections.name": section_name,
-                    "sections.subsections.name": subsection_name,
-                    "sections.subsections.cells.name": cell_name
-                },
-                {
-                    "$set": {
-                        "sections.$[section].subsections.$[subsection].cells.$[cell].rating": cell_rating
-                    }
-                },
-                array_filters=[
-                    {"section.name": section_name},
-                    {"subsection.name": subsection_name},
-                    {"cell.name": cell_name}
-                ]
-            )
-            if result.modified_count == 0:
-                return "Section, subsection, or cell not found in the project", 404
-        except Exception as e:
-            print("Error:", e)
-            return "An error occurred", 500
-
-        return redirect(url_for("edit_project", project_id=project_id))
 
     if __name__ == "__main__":
         app.run(debug=True)

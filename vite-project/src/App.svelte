@@ -10,7 +10,7 @@
   const webAuth = new Auth0.WebAuth({
       domain: 'dev-whbba5qnfveb88fc.us.auth0.com',
       clientID: 'lmZzOfWN5OU25eodYKHpgPaiN67UQ5m3',
-      redirectUri: 'https://survzilla-frontend-finish.onrender.com/',
+      redirectUri: 'http://localhost:5174/',
       responseType: 'token id_token',
       scope: 'openid profile email',
   });

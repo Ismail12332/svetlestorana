@@ -78,7 +78,7 @@
         const user_id = localStorage.getItem('user_id');
 
         // Send a GET request to fetch projects
-        const response = await fetch(`https://survzilla-frontend-finish.onrender.com/glav?user_id=${user_id}`, {
+        const response = await fetch(`https://survzilla-frontend-finish.onrender.com/api/glav?user_id=${user_id}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -101,7 +101,7 @@
 
     // Fetch projects when the component is mounted
     
-    
+    let activeImage = null;
 </script>
 
 <style>
@@ -116,7 +116,8 @@ form {
 
 main {
     width: 100%;
-    height: 1200px;
+    height: 100%;
+    min-height: 100vh;
     background: linear-gradient(to bottom, #011a2b, #011529);
 }
 
@@ -130,24 +131,67 @@ label {
 
 p,ul {
     color: #fff;
+    margin-top: 0;
+    margin-bottom: 0rem;
 }
 
 
 
 .project-info {
     display: flex;
-    margin: 2.9%;
-    flex: 1; /* Равное распределение доступного пространства между дочерними элементами */
-    border: 1px solid #000; /* Добавьте границу, чтобы лучше видеть разделение */
+    justify-content: space-between; /* Распределите пространство между деталями проекта и изображением */
+    align-items: center; /* Центрирование элементов по вертикали */
+    border: 1px solid #000; /* Граница вокруг каждого элемента списка */
     padding: 10px;
     background-color: #191d32;
-    justify-content: space-around;
+    margin-bottom: 10px; /* Отступ между элементами списка */
 }
 
-.footer{
-    height: 287px;
-    background: linear-gradient(to bottom, #011529, #011a2b);
+.project-details {
+    margin-left: 50px;/* Стили для деталей проекта */
 }
+
+.project-images {
+    display: flex; /* Используйте flexbox для управления расположением элементов */
+    justify-content: flex-end; /* Выравнивание элементов по правому краю */
+    gap: 25px; /* Расстояние между элементами */
+}
+
+.project-image {
+    /* Стили для изображения, например, размер */
+    max-width: 300px; /* Максимальная ширина изображения */
+    height: auto; /* Высота изображения будет пропорциональной ширине */
+}
+
+
+.project-image img {
+    max-width: 300px; /* Максимальная ширина изображения */
+    height: auto; /* Автоматическая высота сохранит пропорции изображения */
+}
+
+.thumbnail {
+        width: 100px; /* Или другой подходящий размер */
+        cursor: pointer;
+}
+
+.modalimage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.active-image {
+    max-width: 90%;
+    max-height: 90%;
+    height: 400px;
+}
+
 </style>
 
 <!-- <head>
@@ -222,19 +266,36 @@ p,ul {
             </form>
             <h1>Добро пожаловать!</h1>
             <h2>Ваши проекты:</h2>
-
+            {#if activeImage}
+            <div class="modalimage" on:click={() => activeImage = null}>
+                <img src={activeImage} alt="Active Image" class="active-image"/>
+            </div>
+            {/if}
             <ul>
                 {#if $projects.length > 0}
                     {#each $projects as project (project._id)}
                         <li class="project-info">
-                            <Link to={`/EditProject/${project._id}`}>{project._id}</Link>
-                            <!--<a href="/edit_project/{project._id}" on:click={() => goToEditProject(project._id)}>Sign in</a>-->
-                            <strong>Name:</strong> {project.first_name} {project.last_name}<br>
-                            <strong>City: </strong> {project.city}<br>
-                            <strong>Phone: </strong> {project.phone}<br>
-                            <strong>Post: </strong> {project.post}<br>
-                            <strong>Time create: </strong> {project.created_at}<br>
-                            <p><strong>Vessel name: </strong> {project.vessel_name}</p>
+                            <div class="project-details">
+                                <Link to={`/EditProject/${project._id}`}>
+                                    <strong>Name:</strong> {project.first_name} {project.last_name}<br>
+                                </Link>
+                                <strong>City: </strong> {project.city}<br>
+                                <strong>Phone: </strong> {project.phone}<br>
+                                <strong>Post: </strong> {project.post}<br>
+                                <strong>Time create: </strong> {project.created_at}<br>
+                                <strong>Vessel name: </strong> {project.vessel_name}
+                            </div>
+                            <!--{#if project.sections.introduction.gen_info.images && project.sections.introduction.gen_info.images.length > 0}
+                                <div class="project-images">
+                                    {#each project.sections.introduction.gen_info.images as image}
+                                        <div class="project-image">
+                                            <img src={image} alt="Project Image" on:click={() => activeImage = image}/>
+                                        </div>
+                                    {/each}
+                                </div>
+                            {:else}
+                                <h1></h1>
+                            {/if}-->
                         </li>
                     {/each}
                 {:else}
@@ -242,7 +303,5 @@ p,ul {
                 {/if}
             </ul>
         <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script> -->
-            <div class='footer'>
 
-            </div>
     </main>
