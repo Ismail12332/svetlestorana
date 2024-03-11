@@ -39,7 +39,7 @@ def create_app():
     users_collection = app.db.users
     projects_collection = app.db.projects
     client = OpenAI(
-        api_key="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",
+        api_key="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",
     )
 
     # Создание клиента Backblaze B2
